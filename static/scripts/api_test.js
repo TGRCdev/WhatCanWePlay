@@ -21,7 +21,8 @@ function createTypeInput(type)
     var input;
     switch(type)
     {
-        case "csl":
+        case "csl:string":
+        case "csl:int":
             input = document.createElement("input")
             input.placeholder = "comma,separated,values"
             input.type = "text"
@@ -56,7 +57,8 @@ window.onload = function() {
     var param_table = document.getElementById("function-params-table")
 
     var type_strings = {
-        "csl": "comma-separated list"
+        "csl:string": "comma-separated list",
+        "csl:int": "comma-separated list",
     }
 
     for(var i = 0; i < params_data.length; i++)
@@ -97,9 +99,8 @@ function responseReceived(response)
 {
     var response_box = document.getElementById("response")
     var submit_button = document.getElementById("submit-request")
-    response.text().then(function(text){response_box.innerHTML = text})
+    response.text().then(function(text){response_box.innerHTML = text;submit_button.disabled = false;})
     // i hate futures so much
-    submit_button.disabled = false;
 }
 
 function getAndSubmit()
@@ -123,11 +124,19 @@ function getAndSubmit()
             case "int":
                 value = parseInt(value)
                 break;
-            case "csl":
+            case "csl:string":
                 var list = value.split(",")
                 for(var j = 0; j < list.length; j++)
                 {
                     list[j] = list[j].trim()
+                }
+                value = list
+                break;
+            case "csl:int":
+                var list = value.split(",")
+                for(var j = 0; j < list.length; j++)
+                {
+                    list[j] = parseInt(list[j].trim())
                 }
                 value = list
                 break;

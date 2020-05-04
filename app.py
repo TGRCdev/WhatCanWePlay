@@ -18,6 +18,7 @@ from flask import Flask, request, jsonify, Response, render_template
 from werkzeug.exceptions import BadRequest
 import json
 from steam_utils import get_steam_id, get_steam_user_info
+from igdb_utils import get_game_info
 from exceptions import SteamBadVanityUrlException
 app = Flask(__name__)
 
@@ -31,12 +32,12 @@ app.debug = config.get("DEBUG", False)
 def hello_world():
     return 'Hello, World!\n' + str(request.args)
 
-# get_steam_user_info - POST
-# parameters (encoded JSON body):
+# get_steam_user_info
+# parameters:
 # steam_ids - array of integers or strings
 # vanity_urls - array of strings
 #
-# returns (encoded JSON response):
+# returns:
 # dictionary
 # ["users"] - dictionary, key is steam id, value is user data dictionary
 # ["vanity_to_steam_ids"] - dictionary, key is vanity url, value is steam id or "" if invalid
@@ -76,20 +77,78 @@ def get_steam_user_info_v1():
         return jsonify(user_info)
     except BadRequest as b:
         return (b.description, 400)
-    
-    # REMOVE
-    return ("", 200)
+
+# get_igdb_game_info
+# parameters:
+# igdb_ids - array of strings or integers
+# fields - array of strings
+#
+# returns:
+# dictionary, keys are igdb_ids, values are dictionaries
+# [igdb_id]["exists"] - "true" if the game was found in the IGDB, "false" otherwise. all other values exist only if "exists" is true.
+@app.route("/api/v1/get_igdb_game_info", methods=["POST"])
+def get_igdb_game_info_v1():
+    try:
+        data = request.get_json(force=True)
+        print(request.get_data(as_text=True))
+
+        igdb_ids = data.get("igdb_ids", [])
+        if not isinstance(igdb_ids, list):
+            return ("igdb_ids must be an array of strings or integers", 400)
+        igdb_ids = set(igdb_ids)
+        igdb_ids.discard("")
+        igdb_ids = set(map(str, igdb_ids))
+
+        print(igdb_ids)
+
+        fields = data.get("fields", [])
+        fields = set(fields)
+        fields.discard("")
+
+        if len(igdb_ids) == 0:
+            return ("get_igdb_game_info requires igdb_ids", 400)
+        
+        if len(fields) == 0:
+            igdb_info = get_game_info(igdb_key, igdb_ids)
+        else:
+            fields = ",".join(map(str.strip, fields))
+            igdb_info = get_game_info(igdb_key, igdb_ids, fields)
+        
+        print(igdb_info.keys())
+        print(igdb_key)
+        
+        for id in igdb_ids:
+            if not id in igdb_info.keys():
+                igdb_info[id] = {"exists": False}
+            else:
+                igdb_info[id]["exists"] = True
+        
+        return jsonify(igdb_info)
+    except BadRequest as b:
+        return (b.description, 400)
 
 if app.debug:
     @app.route("/api/v1/get_steam_user_info", methods=["GET"])
     def get_steam_user_info_v1_test():
         params = [
-            {"name": "steam_ids", "type": "csl"},
-            {"name": "vanity_urls", "type": "csl"},
+            {"name": "steam_ids", "type": "csl:string"},
+            {"name": "vanity_urls", "type": "csl:string"},
         ]
 
         return render_template("api_test.html",
         api_function_name="get_steam_user_info",
+        api_version="v1",
+        api_function_params=json.dumps(params)
+        )
+    @app.route("/api/v1/get_igdb_game_info", methods=["GET"])
+    def get_igdb_game_info_v1_test():
+        params = [
+            {"name": "igdb_ids", "type": "csl:int"},
+            {"name": "fields", "type": "csl:string"},
+        ]
+
+        return render_template("api_test.html",
+        api_function_name="get_igdb_game_info",
         api_version="v1",
         api_function_params=json.dumps(params)
         )

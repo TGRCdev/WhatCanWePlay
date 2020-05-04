@@ -70,6 +70,8 @@ def get_game_info(apikey: str, igdb_ids, fields="name,platforms,tags,game_modes,
         if i % 500 == 0 or i == len(igdb_ids):
             id_str += ")"
 
+            print("fields {}; where id = {}; limit {};".format(fields, id_str, min(500, len(igdb_ids))))
+
             r = requests.post(api_base + "games",
                 data="fields {}; where id = {}; limit {};".format(fields, id_str, min(500, len(igdb_ids))),
                 headers={"Accept": "application/json", "user-key": apikey}
