@@ -1,10 +1,10 @@
 import requests
-import igdb_utils
-from exceptions import SteamUserCouldntGetGamesException, SteamUserNoGamesException, SteamBadVanityUrlException, SteamAPIException
+from . import igdb_utils
+from .exceptions import SteamUserCouldntGetGamesException, SteamUserNoGamesException, SteamBadVanityUrlException, SteamAPIException
 
 api_base = "https://api.steampowered.com/"
 
-def get_steam_id(webkey: str, vanityurl: str):
+def get_steam_id(webkey: str, vanityurl: str) -> str:
     r = requests.get(api_base + "ISteamUser/ResolveVanityURL/v1/", {"key": webkey, "vanityurl": vanityurl})
     r.raise_for_status()
     response = r.json()["response"]
@@ -15,7 +15,31 @@ def get_steam_id(webkey: str, vanityurl: str):
     else:
         return r.json()["response"]["steamid"]
 
-def get_owned_steam_games(webkey: str, steamid: str, include_free_games: bool=False, include_appinfo: bool=False):
+def get_steam_user_info(webkey: str, steamids):
+    if isinstance(steamids,(str,int)):
+        steamids = [str(steamids)]
+    if len(steamids) == 0:
+        return {}
+    
+    steamid_str = ",".join(map(str, steamids))
+    
+    r = requests.get(api_base + "ISteamUser/GetPlayerSummaries/v2/", {"key": webkey, "steamids": steamid_str})
+    r.raise_for_status()
+    response = r.json()["response"]
+
+    user_dict = {}
+
+    for steam_id in steamids:
+        user_dict[str(steam_id)] = {"exists": False}
+
+    for user in response["players"]:
+        steam_id = str(user["steamid"])
+        user_dict[steam_id] = user
+        user_dict[steam_id]["exists"] = True
+
+    return user_dict
+
+def get_owned_steam_games(webkey: str, steamid: str, include_free_games: bool=False, include_appinfo: bool=False) -> list:
     r = requests.get(api_base + "IPlayerService/GetOwnedGames/v0001/", {"key": webkey, "steamid": steamid, "include_appinfo": include_appinfo, "include_played_free_games": include_free_games, "format": "json"})
     r.raise_for_status()
 
@@ -28,7 +52,7 @@ def get_owned_steam_games(webkey: str, steamid: str, include_free_games: bool=Fa
 
     return games
 
-def intersect_owned_steam_games(steamkey: str, steamids: list, include_free_games: bool=False, include_appinfo: bool=False, igdbkey: str="", remove_non_igdb: bool=False):
+def intersect_owned_steam_games(steamkey: str, steamids: list, include_free_games: bool=False, include_appinfo: bool=False, igdbkey: str="", remove_non_igdb: bool=False) -> dict:
     if len(steamids) == 0:
         return {}
     
