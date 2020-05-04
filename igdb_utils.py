@@ -85,8 +85,16 @@ def get_steam_game_info(apikey: str, appids, fields="name,platforms,tags,game_mo
     
     # Step 1: Convert steam_id to igdb_id
     game_data = get_steam_game_igdb_id(apikey, appids)
+    bad_entries = []
     for game in game_data.values():
-        igdb_to_steam[game["igdb_id"]] = game["steam_id"]
+        if game["igdb_id"] in igdb_to_steam.keys():
+            print("DUPLICATE FOUND! (IGDB ID: {}, First Steam ID: {}, Duplicate Steam ID: {}) Ignoring...".format(game["igdb_id"], igdb_to_steam[game["igdb_id"]], game["steam_id"]))
+            bad_entries.append(game["steam_id"])
+        else:
+            igdb_to_steam[game["igdb_id"]] = game["steam_id"]
+    
+    for steam_id in bad_entries:
+        game_data.pop(steam_id)
     
     # From this point, do not use appids. Only use the game_data dictionary.
 
@@ -101,5 +109,5 @@ def get_steam_game_info(apikey: str, appids, fields="name,platforms,tags,game_mo
         steam_key = igdb_to_steam[igdb_key]
         igdb_game["steam_id"] = steam_key
         game_data[steam_key] = igdb_game
-    
+
     return game_data

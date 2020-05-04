@@ -28,9 +28,9 @@ def get_owned_steam_games(webkey: str, steamid: str, include_free_games: bool=Fa
 
     return games
 
-def intersect_owned_steam_games(steamkey: str, steamids: list, include_free_games: bool=False, include_appinfo: bool=False, igdbkey: str=""):
+def intersect_owned_steam_games(steamkey: str, steamids: list, include_free_games: bool=False, include_appinfo: bool=False, igdbkey: str="", remove_non_igdb: bool=False):
     if len(steamids) == 0:
-        return set()
+        return {}
     
     game_info = {} # Game info by steam ID
     
@@ -58,12 +58,16 @@ def intersect_owned_steam_games(steamkey: str, steamids: list, include_free_game
     
     if igdbkey != "":
         more_game_details = igdb_utils.get_steam_game_info(igdbkey, shared_games)
-        for id in more_game_details.keys():
-            game_info[id] = more_game_details[id]
+        if remove_non_igdb:
+            game_info = more_game_details
+        else:
+            for id in more_game_details.keys():
+                game_info[id] = more_game_details[id]
     
     shared_games_dict = {}
 
     for key in shared_games:
-        shared_games_dict[key] = game_info[key]
+        if key in game_info.keys():
+            shared_games_dict[key] = game_info[key]
 
     return shared_games_dict

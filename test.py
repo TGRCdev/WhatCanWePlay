@@ -16,7 +16,7 @@ if __name__ == "__main__":
     
     print(steam_ids)
 
-    shared_games = intersect_owned_steam_games(steam_key, steam_ids, True, True, igdb_key)
+    shared_games = intersect_owned_steam_games(steam_key, steam_ids, True, True, igdb_key, True)
 
     print("Games shared by all steam ids:")
     for game in shared_games.values():
