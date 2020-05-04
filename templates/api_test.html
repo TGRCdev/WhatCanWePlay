@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>{{ api_function_name }} {{ api_version }}</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='styles/default_dark.css') }}">
+        <script src="{{ url_for('static', filename='scripts/api_test.js') }}"></script>
+    </head>
+    <body id="function-data" data-function-params="{{ api_function_params }}">
+        <h1>{{ api_function_name }} test page</h1>
+        <h2>version: {{ api_version }}</h2>
+        <table id="function-params-table">
+            <tr>
+                <th>Param Name</th>
+                <th>Param Type</th>
+                <th>Value Entry</th>
+            </tr>
+        </table>
+        <textarea rows="25" cols="60" placeholder="Response" id="response" readonly></textarea>
+    </body>
+</html>

@@ -1,6 +1,6 @@
 import requests
-from . import igdb_utils
-from .exceptions import SteamUserCouldntGetGamesException, SteamUserNoGamesException, SteamBadVanityUrlException, SteamAPIException
+import igdb_utils
+from exceptions import SteamUserCouldntGetGamesException, SteamUserNoGamesException, SteamBadVanityUrlException, SteamAPIException
 
 api_base = "https://api.steampowered.com/"
 
