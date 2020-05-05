@@ -20,13 +20,18 @@ import json
 from steam_utils import get_steam_id, get_steam_user_info
 from igdb_utils import get_game_info
 from exceptions import SteamBadVanityUrlException
-app = Flask(__name__)
 
 # Load config
 config = json.load(open("config.json", "r"))
 steam_key = config["steam-key"]
 igdb_key = config["igdb-key"]
-app.debug = config.get("DEBUG", False)
+debug = config.get("DEBUG", False)
+enable_api_tests = config.get("enable_api_tests", debug)
+
+# Create uWSGI callable
+app = Flask(__name__)
+app.debug = debug
+app.config["SERVER_NAME"] = config.get("www-host", "127.0.0.1")
 
 @app.route('/')
 def hello_world():
@@ -127,7 +132,7 @@ def get_igdb_game_info_v1():
     except BadRequest as b:
         return (b.description, 400)
 
-if app.debug:
+if enable_api_tests:
     @app.route("/api/v1/get_steam_user_info", methods=["GET"])
     def get_steam_user_info_v1_test():
         params = [

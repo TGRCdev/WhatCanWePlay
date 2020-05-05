@@ -1,5 +1,7 @@
 {
-    "DEBUG": true,
+    "DEBUG": false,
+    "enable_api_tests": false,
     "steam-key": "YOUR STEAM KEY HERE",
-    "igdb-key": "YOUR IGDB KEY HERE"
+    "igdb-key": "YOUR IGDB KEY HERE",
+    "www-host": "yoururl.here"
 }
