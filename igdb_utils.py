@@ -58,6 +58,8 @@ def get_game_info(apikey: str, igdb_ids, fields="name,platforms,tags,game_modes,
         igdb_ids = [str(igdb_ids)]
     if len(igdb_ids) == 0:
         return {}
+    if fields == "":
+        return {}
     
     id_str = "("
 

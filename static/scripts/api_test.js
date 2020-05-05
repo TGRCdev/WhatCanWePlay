@@ -22,9 +22,13 @@ function createTypeInput(type)
     switch(type)
     {
         case "csl:string":
+            input = document.createElement("input")
+            input.placeholder = "comma,separated,strings"
+            input.type = "text"
+            break;
         case "csl:int":
             input = document.createElement("input")
-            input.placeholder = "comma,separated,values"
+            input.placeholder = "123,456,789"
             input.type = "text"
             break;
         case "string":
@@ -57,8 +61,8 @@ window.onload = function() {
     var param_table = document.getElementById("function-params-table")
 
     var type_strings = {
-        "csl:string": "comma-separated list",
-        "csl:int": "comma-separated list",
+        "csl:string": "comma-separated strings",
+        "csl:int": "comma-separated ints",
     }
 
     for(var i = 0; i < params_data.length; i++)
@@ -125,6 +129,8 @@ function getAndSubmit()
                 value = parseInt(value)
                 break;
             case "csl:string":
+                if(value.length == 0)
+                    { value = []; break}
                 var list = value.split(",")
                 for(var j = 0; j < list.length; j++)
                 {
@@ -133,6 +139,8 @@ function getAndSubmit()
                 value = list
                 break;
             case "csl:int":
+                if(value.length == 0)
+                    { value = []; break}
                 var list = value.split(",")
                 for(var j = 0; j < list.length; j++)
                 {

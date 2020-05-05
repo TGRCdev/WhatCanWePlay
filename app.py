@@ -20,6 +20,7 @@ import json
 from steam_utils import get_steam_id, get_steam_user_info
 from igdb_utils import get_game_info
 from exceptions import SteamBadVanityUrlException
+from requests import HTTPError
 
 # Load config
 config = json.load(open("config.json", "r"))
@@ -96,34 +97,87 @@ def get_steam_user_info_v1():
 # [igdb_id]["exists"] - "true" if the game was found in the IGDB, "false" otherwise. all other values exist only if "exists" is true.
 @app.route("/api/v1/get_igdb_game_info", methods=["POST"])
 def get_igdb_game_info_v1():
+    valid_fields = set([
+        "age_ratings",
+        "aggregated_rating",
+        "aggregated_rating_count",
+        "alternative_names",
+        "artworks",
+        "bundles",
+        "category",
+        "collection",
+        "cover",
+        "created_at",
+        "dlcs",
+        "expansions",
+        "external_games",
+        "first_release_date",
+        "follows",
+        "franchise",
+        "franchises",
+        "game_engines",
+        "game_modes",
+        "genres",
+        "hypes",
+        "involved_companies",
+        "keywords",
+        "multiplayer_modes",
+        "name",
+        "parent_game",
+        "platforms",
+        "player_perspectives",
+        "popularity",
+        "pulse_count",
+        "rating",
+        "rating_count",
+        "release_date",
+        "screenshots",
+        "similar_games",
+        "slug",
+        "standalone_expansions",
+        "status",
+        "storyline",
+        "summary",
+        "tags",
+        "themes",
+        "time_to_beat",
+        "total_rating",
+        "total_rating_count",
+        "updated_at",
+        "url",
+        "version_parent",
+        "version_title",
+        "videos",
+        "websites"
+    ])
     try:
         data = request.get_json(force=True)
         print(request.get_data(as_text=True))
 
         igdb_ids = data.get("igdb_ids", [])
         if not isinstance(igdb_ids, list):
-            return ("igdb_ids must be an array of strings or integers", 400)
+            return ("igdb_ids must be an array of integers", 400)
         igdb_ids = set(igdb_ids)
         igdb_ids.discard("")
-        igdb_ids = set(map(str, igdb_ids))
-
-        print(igdb_ids)
+        if len(igdb_ids) == 0:
+            return ("get_igdb_game_info requires igdb_ids", 400)
+        try:
+            igdb_ids = set(map(str, map(int, igdb_ids)))
+        except TypeError:
+            return ("igdb_ids must contain integers only", 400)
 
         fields = data.get("fields", [])
         fields = set(fields)
         fields.discard("")
-
-        if len(igdb_ids) == 0:
-            return ("get_igdb_game_info requires igdb_ids", 400)
+        invalid_fields = fields - valid_fields
+        if len(invalid_fields) > 0:
+            return ("invalid fields passed: " + ", ".join(invalid_fields), 400)
         
         if len(fields) == 0:
             igdb_info = get_game_info(igdb_key, igdb_ids)
         else:
             fields = ",".join(map(str.strip, fields))
             igdb_info = get_game_info(igdb_key, igdb_ids, fields)
-        
-        print(igdb_info.keys())
-        print(igdb_key)
         
         for id in igdb_ids:
             if not id in igdb_info.keys():
@@ -134,6 +188,8 @@ def get_igdb_game_info_v1():
         return jsonify(igdb_info)
     except BadRequest as b:
         return (b.description, 400)
+    except HTTPError as h:
+        return ("there was an invalid field name in \"fields\"", 400)
 
 if enable_api_tests:
     @app.route("/api/v1/get_steam_user_info", methods=["GET"])
