@@ -19,8 +19,19 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 <html>
     <head>
         <title>{{ api_function_name }} {{ api_version }}</title>
-        <link rel="stylesheet" href="{{ url_for('static', filename='styles/default_dark.css') }}">
         <script src="{{ url_for('static', filename='scripts/api_test.js') }}"></script>
+        <style>
+            html {
+                color: whitesmoke;
+                background-color: #262626;
+                height: 100%;
+                font-family: "Trebuchet MS", Helvetica, sans-serif;
+            }
+            table td, th {
+                background-color: #131313;
+                padding: 7px;
+            }
+        </style>
     </head>
     <body id="function-data" data-function-params="{{ api_function_params }}">
         <h1>{{ api_function_name }} test page</h1>

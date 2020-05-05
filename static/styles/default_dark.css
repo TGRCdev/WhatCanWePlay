@@ -20,10 +20,33 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 html {
     color: whitesmoke;
-    background-color: #262626
+    background-color: #262626;
+    height: 100%;
+    font-family: "Trebuchet MS", Helvetica, sans-serif;
 }
 
-table td, th {
-    background-color: #131313;
-    padding: 7px;
+body {
+    margin: 0;
+    height: 100%;
+}
+
+#base-header {
+    margin: 0;
+    padding: 4px;
+    background: linear-gradient(#262626, #131313);
+    margin-bottom: 30px;
+}
+
+#base-header-content {
+    margin: auto;
+    max-width: 1200px;
+}
+
+main {
+    margin: auto;
+    max-width: 1200px;
+}
+
+#header-h1 {
+    margin: 0;
 }

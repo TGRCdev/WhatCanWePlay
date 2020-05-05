@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from flask import Flask, request, jsonify, Response, render_template
+from flask import Flask, request, jsonify, Response, render_template, redirect
 from werkzeug.exceptions import BadRequest
 import json
 from steam_utils import get_steam_id, get_steam_user_info
@@ -35,11 +35,18 @@ app.debug = debug
 
 @app.route('/')
 def hello_world():
-    root_str = "<html><head><link rel=\"stylesheet\" href=\"static/styles/default_dark.css\"></link></head><body>Hello, World!"
+    root_str = ""
     if request.args:
-        root_str += "<br/>Request arguments: " + str(request.args.to_dict(flat=True))
-    root_str += "</body></html>"
-    return root_str
+        root_str = str(request.args.to_dict(flat=True))
+    return render_template("home.html", request_info=root_str)
+
+@app.route("/privacy")
+def privacy_page():
+    return render_template("privacy.html")
+
+@app.route("/privacy.html")
+def redirect_to_privacy():
+    return redirect("/privacy", 301)
 
 # get_steam_user_info
 # parameters:
