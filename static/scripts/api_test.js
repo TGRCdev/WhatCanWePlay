@@ -87,6 +87,15 @@ window.onload = function() {
         value_cell.appendChild(value_input)
     }
 
+    if(this.params_data.length == 0)
+    {
+        var noparams_row = param_table.insertRow()
+        var noparams_cell = noparams_row.insertCell()
+        noparams_cell.colSpan = 3
+        noparams_cell.style = "text-align:center;color:grey;"
+        noparams_cell.innerHTML = "< no parameters >"
+    }
+
     var submit_row = param_table.insertRow()
     var submit_cell = submit_row.insertCell()
     submit_cell.colSpan = 3

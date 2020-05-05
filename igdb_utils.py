@@ -131,3 +131,9 @@ def get_steam_game_info(apikey: str, appids, fields="name,platforms,tags,game_mo
         game_data[steam_key] = igdb_game
 
     return game_data
+
+def get_api_status(apikey:str):
+    r = requests.get(api_base + "api_status", headers={"user-key": apikey})
+    r.raise_for_status()
+
+    return r.json()

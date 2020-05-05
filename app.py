@@ -18,7 +18,7 @@ from flask import Flask, request, jsonify, Response, render_template
 from werkzeug.exceptions import BadRequest
 import json
 from steam_utils import get_steam_id, get_steam_user_info
-from igdb_utils import get_game_info
+from igdb_utils import get_game_info, get_api_status
 from exceptions import SteamBadVanityUrlException
 from requests import HTTPError
 
@@ -162,9 +162,18 @@ def get_igdb_game_info_v1():
         if len(igdb_ids) == 0:
             return ("get_igdb_game_info requires igdb_ids", 400)
         try:
-            igdb_ids = set(map(str, map(int, igdb_ids)))
+            igdb_ids = set(map(int, igdb_ids))
+            for id in igdb_ids:
+                print(id)
+                if id > 2147483647: # IGDB uses 32-bit integer keys
+                    return ("IGDB IDs cannot be larger than 2,147,483,647", 400)
+                elif id <= 0:
+                    return ("IGDB IDs must be greater than 0", 400)
+            igdb_ids = set(map(str, igdb_ids))
         except TypeError:
             return ("igdb_ids must contain integers only", 400)
+        
+        print(igdb_ids)
 
         fields = data.get("fields", [])
         fields = set(fields)
@@ -188,8 +197,12 @@ def get_igdb_game_info_v1():
         return jsonify(igdb_info)
     except BadRequest as b:
         return (b.description, 400)
-    except HTTPError as h:
-        return ("there was an invalid field name in \"fields\"", 400)
+    except HTTPError:
+        return ("an unknown error occurred while requesting the IGDB api", 400)
+
+@app.route("/api/v1/get_igdb_api_status", methods=["POST"])
+def get_igdb_api_status_v1():
+    return jsonify(get_api_status(igdb_key))
 
 if enable_api_tests:
     @app.route("/api/v1/get_steam_user_info", methods=["GET"])
@@ -213,6 +226,15 @@ if enable_api_tests:
 
         return render_template("api_test.html",
         api_function_name="get_igdb_game_info",
+        api_version="v1",
+        api_function_params=json.dumps(params)
+        )
+    @app.route("/api/v1/get_igdb_api_status", methods=["GET"])
+    def get_igdb_api_status_v1_test():
+        params = []
+
+        return render_template("api_test.html",
+        api_function_name="get_igdb_api_status",
         api_version="v1",
         api_function_params=json.dumps(params)
         )

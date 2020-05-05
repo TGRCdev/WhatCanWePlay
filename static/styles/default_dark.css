@@ -23,7 +23,7 @@ html {
     background-color: #262626
 }
 
-table td {
+table td, th {
     background-color: #131313;
     padding: 7px;
 }
