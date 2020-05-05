@@ -31,11 +31,13 @@ enable_api_tests = config.get("enable_api_tests", debug)
 # Create uWSGI callable
 app = Flask(__name__)
 app.debug = debug
-app.config["SERVER_NAME"] = config.get("www-host", "127.0.0.1")
 
 @app.route('/')
 def hello_world():
-    return 'Hello, World!\n' + str(request.args)
+    root_str = "Hello, World!"
+    if request.args:
+        root_str += "<br/>Request arguments: " + str(request.args.to_dict(flat=True))
+    return root_str
 
 # get_steam_user_info
 # parameters:
