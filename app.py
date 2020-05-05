@@ -34,9 +34,10 @@ app.debug = debug
 
 @app.route('/')
 def hello_world():
-    root_str = "Hello, World!"
+    root_str = "<html><head><link rel=\"stylesheet\" href=\"static/styles/default_dark.css\"></link></head><body>Hello, World!"
     if request.args:
         root_str += "<br/>Request arguments: " + str(request.args.to_dict(flat=True))
+    root_str += "</body></html>"
     return root_str
 
 # get_steam_user_info
