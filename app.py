@@ -43,6 +43,10 @@ app.secret_key = secrets.token_hex()
 def index():
     return render_template("home.html", steam_info=session.get("steam_info", {}))
 
+@app.route("/prototype")
+def prototype():
+    return render_template("prototype.html", steam_info=session.get("steam_info", {}))
+
 @app.route("/steam_login", methods=["GET", "POST"])
 def steam_login():
     if request.method == "POST":

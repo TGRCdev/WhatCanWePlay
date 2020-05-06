@@ -1,27 +1,24 @@
 /*
-This file is a part of WhatCanWePlay
-Copyright (C) 2020 TGRCDev
+    This file is a part of WhatCanWePlay
+    Copyright (C) 2020 TGRCDev
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU Affero General Public License as published
-by the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Affero General Public License for more details.
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
 
-You should have received a copy of the GNU Affero General Public License
-along with this program.  If not, see <https://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-
-/* yes i put the AGPL notice in the near-bare test page CSS file */
 
 html {
     color: whitesmoke;
     background-color: #262626;
-    height: 100%;
     font-family: "Trebuchet MS", Helvetica, sans-serif;
 }
 
@@ -29,17 +26,39 @@ a:link, a:visited {
     color: #a3a3a3
 }
 
-body {
+html, body {
     margin: 0;
     height: 100%;
 }
 
+#main-table {
+    margin: 0;
+    height:100%;
+    width:100%;
+    border-collapse: collapse;
+}
+
+#main-table td {
+    border: 0;
+    padding:0;
+    margin:0;
+}
+
 #base-header {
     margin: 0;
+    padding: 0;
+    border: none;
     background: linear-gradient(#262626, #131313);
     margin-bottom: 30px;
     max-height: 56px;
     min-height: 56px;
+}
+
+#header-row {
+    padding:0;
+    margin:0;
+    max-height: 56px;
+    height: 56px;
 }
 
 #base-header-h1{

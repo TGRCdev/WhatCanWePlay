@@ -19,7 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 <html>
     <head>
         {% block head %}
-
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         
         <title>
             {% block title %}{% endblock %}
@@ -37,15 +37,20 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
         {% endblock %}
     </head>
-    <body>
+    <body><table id="main-table">
+        
         {% block header %}
-        <header id="base-header">
-            <h1 id="base-header-h1">What Can We Play?</h1>
-        </header>
+        <tr id="header-row"><td>
+            <header id="base-header">
+                <h1 id="base-header-h1">What Can We Play?</h1>
+            </header>
+        </td></tr>
         {% endblock %}
 
         <main>
-            {% block main %}{% endblock %}
+            <tr id="main-row"><td>
+                {% block main %}{% endblock %}
+            </td></tr>
         </main>
-    </body>
+    </table></body>
 </html>

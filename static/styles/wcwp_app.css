@@ -1,0 +1,44 @@
+#app-row-1 {
+    max-height: 80px;
+    height: 80px;
+}
+
+#app-table {
+    margin: auto;
+    padding-left: 40px;
+    padding-right: 40px;
+    width: 100%;
+    height: 100%;
+    border-spacing: 20px;
+}
+
+#app-table td {
+    border-width: 10px;
+    border-style: solid;
+    border-color: #121212;
+    border-radius: 5px;
+}
+
+#app-table #submit-cell {
+    border: none;
+    height:80px;
+    max-height:80px;
+    width: 50%;
+}
+
+#submit {
+    color: #bcf73f;
+    border-style: solid;
+    border-radius: 5px;
+    border-color: #608511;
+    background-color: #608511;
+    width: 188px;
+    height: 64px;
+    font-size: 30px;
+}
+
+#submit:hover {
+    color: #516d16;
+    border-color: #92d600;
+    background-color: #92d600;
+}

@@ -1,0 +1,28 @@
+{% extends "base_page.html" %}
+
+{% block styles %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='styles/wcwp_app.css') }}"/>
+{% endblock %}
+
+{% block main %}
+
+<table id="app-table">
+    <tr id="app-row-1">
+        <td id="user-select-cell" rowspan="2">
+            users cell
+        </td>
+        <td id="submit-cell" align="center">
+            <button id="submit">
+                Find Games
+            </button>
+        </td>
+    </tr>
+    <tr>
+        <td id="game-cell">
+            game cell
+        </td>
+    </tr>
+</table>
+
+{% endblock %}
