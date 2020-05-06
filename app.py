@@ -62,8 +62,17 @@ def steam_login():
 
     if validate_steam_identity(dict(request.args)):
         steam_id = request.args["openid.identity"].rsplit("/")[-1]
-        session["steam_info"] = get_steam_user_info(steam_key, steam_id)
+        info = get_steam_user_info(steam_key, steam_id)
 
+        if info and info["exists"]:
+            steam_data = {
+                "steam_id": info["steamid"],
+                "screen_name": info["personaname"],
+                "avatar_thumb": info["avatarmedium"],
+                "avatar": info["avatarfull"],
+            }
+            session["steam_info"] = steam_data
+    
     return redirect(url_for("index"))
 
 @app.route("/steam_logout")

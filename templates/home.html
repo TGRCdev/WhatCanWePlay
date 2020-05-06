@@ -23,7 +23,7 @@
 
 {% block main %}
     {% if steam_info %}
-    <h1 style="text-align:center;">Hello, {{ steam_info.personaname }}!</h1>
+    <h1 style="text-align:center;">Hello, {{ steam_info.screen_name }}!</h1>
     <p style="text-align:center;"><a href="steam_logout">Sign out</a></p>
     {% else %}
     {% include "not_signed_in.html" %}
