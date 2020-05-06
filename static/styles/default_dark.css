@@ -25,6 +25,10 @@ html {
     font-family: "Trebuchet MS", Helvetica, sans-serif;
 }
 
+a:link, a:visited {
+    color: #a3a3a3
+}
+
 body {
     margin: 0;
     height: 100%;
@@ -32,14 +36,21 @@ body {
 
 #base-header {
     margin: 0;
-    padding: 4px;
     background: linear-gradient(#262626, #131313);
     margin-bottom: 30px;
+    max-height: 56px;
+    min-height: 56px;
 }
 
-#base-header-content {
-    margin: auto;
-    max-width: 1200px;
+#base-header-h1{
+    margin:0;
+    height:38px;
+    padding-top:9px;
+    text-align: center;
+}
+
+.table-center-contents tr {
+    text-align: center;
 }
 
 main {

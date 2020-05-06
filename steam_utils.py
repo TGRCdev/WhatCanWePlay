@@ -43,6 +43,15 @@ def get_steam_user_info(webkey: str, steamids):
     r.raise_for_status()
     response = r.json()["response"]
 
+    if len(steamids) == 1:
+        user = {}
+        if len(response["players"]) > 0:
+            user = response["players"][0]
+            user["exists"] = True
+        else:
+            user["exists"] = False
+        return user
+
     user_dict = {}
 
     for steam_id in steamids:

@@ -16,16 +16,16 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #}
 
-{% extends "base_page.html" %}
-
-{% block title %}What Can We Play?{% endblock %}
-{% block title_postfix %}{% endblock %}
-
-{% block main %}
-    {% if steam_info %}
-    <h1 style="text-align:center;">Hello, {{ steam_info.personaname }}!</h1>
-    <p style="text-align:center;"><a href="steam_logout">Sign out</a></p>
-    {% else %}
-    {% include "not_signed_in.html" %}
-    {% endif %}
-{% endblock %}
+<table class="table-center-contents" style="margin:auto;">
+    <tr><td><h1>STEP 1</h1></td></tr>
+    <tr><td>
+        Sign in to Steam<br/><br/>
+        <form action="steam_login" method="POST">
+            <input id="user-box" type="image" src="static/images/sits.png" alt="Sign in with Steam" />
+        </form>
+    </td></tr>
+    <tr><td><h1>STEP 2</h1></td></tr>
+    <tr><td>Select friends you want to play games with and click "Find Games"</td></tr>
+    <tr><td><h1>STEP 3</h1></td></tr>
+    <tr><td>Pick one and play together!</td></tr>
+</table>
