@@ -9,7 +9,6 @@
     padding-right: 40px;
     width: 100%;
     height: 100%;
-    border-spacing: 20px;
 }
 
 #app-table td {
@@ -21,9 +20,12 @@
 
 #app-table #submit-cell {
     border: none;
-    height:80px;
-    max-height:80px;
+    height:0px;
     width: 50%;
+}
+
+#users-cell {
+    height: 100%;
 }
 
 #submit {
@@ -43,7 +45,19 @@
     background-color: #92d600;
 }
 
-@media (max-width:360px)
+@media (max-width:700px)
 {
-    
+    #app-table {
+        width: 200%;
+        padding-left: 0;
+        padding-right: 0;
+        border-spacing: default;
+    }
+}
+
+@media (min-width:701px)
+{
+    #app-table {
+        border-spacing: 20px;
+    }
 }

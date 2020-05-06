@@ -53,7 +53,7 @@ html, body {
 }
 
 #main-table td {
-    border: 0;
+    border:0;
     padding:0;
     margin:0;
 }
@@ -95,9 +95,15 @@ html, body {
     text-align: center;
 }
 
-main {
+#main-row {
+    height:100%;
+}
+
+#main-div {
     margin: auto;
     max-width: 1200px;
+    height:100%;
+    overflow:hidden;
 }
 
 #header-h1 {
