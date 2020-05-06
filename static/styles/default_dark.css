@@ -22,6 +22,19 @@ html {
     font-family: "Trebuchet MS", Helvetica, sans-serif;
 }
 
+#js-alert {
+    background-color: #991212;
+    color: white;
+    font-weight: bold;
+    text-align: center;
+    max-height: 25px;
+    height: 20px;
+}
+
+#js-alert-text {
+    margin: 0;
+}
+
 a:link, a:visited {
     color: #a3a3a3
 }
@@ -29,6 +42,7 @@ a:link, a:visited {
 html, body {
     margin: 0;
     height: 100%;
+    min-width: 360px;
 }
 
 #main-table {
@@ -49,7 +63,6 @@ html, body {
     padding: 0;
     border: none;
     background: linear-gradient(#262626, #131313);
-    margin-bottom: 30px;
     max-height: 56px;
     min-height: 56px;
 }
@@ -66,6 +79,16 @@ html, body {
     height:38px;
     padding-top:9px;
     text-align: center;
+}
+
+#base-header-h1 a:link {
+    color: whitesmoke;
+    text-decoration: none;
+}
+
+#base-header-h1 a:visited {
+    color: whitesmoke;
+    text-decoration: none;
 }
 
 .table-center-contents tr {

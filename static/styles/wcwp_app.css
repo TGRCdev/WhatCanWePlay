@@ -42,3 +42,8 @@
     border-color: #92d600;
     background-color: #92d600;
 }
+
+@media (max-width:360px)
+{
+    
+}

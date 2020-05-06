@@ -36,17 +36,24 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         {% endblock %}
 
         {% endblock %}
+        <script>
+            window.onload = function() {
+                this.document.getElementById("js-alert").remove()
+            }
+        </script>
     </head>
     <body><table id="main-table">
         
         {% block header %}
         <tr id="header-row"><td>
             <header id="base-header">
-                <h1 id="base-header-h1">What Can We Play?</h1>
+                <h1 id="base-header-h1"><a href="/">What Can We Play?</a></h1>
             </header>
         </td></tr>
         {% endblock %}
-
+        <tr id="js-alert"><td id="js-alert-cell">
+            <div id="js-alert-text">WhatCanWePlay requires JavaScript to function properly. Please enable JavaScript on your browser.</div>
+        </td></tr>
         <main>
             <tr id="main-row"><td>
                 {% block main %}{% endblock %}
