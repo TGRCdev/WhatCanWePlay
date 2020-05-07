@@ -1,7 +1,11 @@
 {
     "debug": false,
-    "enable_api_tests": false,
+    "enable-api-tests": false,
     "steam-key": "YOUR STEAM KEY HERE",
     "igdb-key": "YOUR IGDB KEY HERE",
-    "www-host": "yoururl.here"
+    "www-host": "yoururl.here",
+    "cookie-max-age": {
+        "days": 0,
+        "weeks": 0
+    }
 }
