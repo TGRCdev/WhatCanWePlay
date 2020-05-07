@@ -17,7 +17,6 @@
 from flask import Flask, request, jsonify, Response, render_template, redirect, session, url_for
 import requests
 from urllib import parse
-import openid.consumer as openid
 from werkzeug.exceptions import BadRequest
 import json
 from steam_utils import get_steam_id, get_steam_user_info
@@ -30,9 +29,8 @@ import secrets
 config = json.load(open("config.json", "r"))
 steam_key = config["steam-key"]
 igdb_key = config["igdb-key"]
-debug = config.get("debug", False)
+debug = config.get("debug", config.get("DEBUG", False))
 enable_api_tests = config.get("enable_api_tests", debug)
-oid_store = config.get("OID_STORE", "oid_store")
 
 # Create uWSGI callable
 app = Flask(__name__)
@@ -48,6 +46,13 @@ def prototype():
     return render_template("prototype.html", steam_info=session.get("steam_info", {}))
 
 @app.route("/steam_login", methods=["GET", "POST"])
+def login_disabled():
+    return (
+        'Steam login is currently disabled<br/><a href="/">Click here to go back home</a>',
+        403
+    )
+
+#@app.route("/steam_login", methods=["GET", "POST"])
 def steam_login():
     if request.method == "POST":
         steam_openid_url = 'https://steamcommunity.com/openid/login'
@@ -79,7 +84,7 @@ def steam_login():
     
     return redirect(url_for("index"))
 
-@app.route("/steam_logout")
+#@app.route("/steam_logout")
 def steam_logout():
     session.pop("steam_info")
     return redirect(url_for("index"))
