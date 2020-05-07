@@ -42,7 +42,8 @@ a:link, a:visited {
 html, body {
     margin: 0;
     height: 100%;
-    min-width: 360px;
+    min-width: 320px;
+    min-height: 320px
 }
 
 #main-table {
@@ -60,11 +61,19 @@ html, body {
 
 #base-header {
     margin: 0;
-    padding: 0;
     border: none;
     background: linear-gradient(#262626, #131313);
     max-height: 56px;
     min-height: 56px;
+    font-weight:bold;
+    font-size: 27px;
+    text-align: center;
+    display:flex;
+    align-items:center;
+}
+
+#base-header a {
+    margin: auto;
 }
 
 #header-row {
@@ -74,19 +83,12 @@ html, body {
     height: 56px;
 }
 
-#base-header-h1{
-    margin:0;
-    height:38px;
-    padding-top:9px;
-    text-align: center;
-}
-
-#base-header-h1 a:link {
+#base-header a:link {
     color: whitesmoke;
     text-decoration: none;
 }
 
-#base-header-h1 a:visited {
+#base-header a:visited {
     color: whitesmoke;
     text-decoration: none;
 }
@@ -108,4 +110,15 @@ html, body {
 
 #header-h1 {
     margin: 0;
+}
+
+/* Desktop only */
+@media (min-width:701px)
+{
+    #main-div {
+        padding: 15px;
+        box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        -webkit-box-sizing: border-box;
+    }
 }

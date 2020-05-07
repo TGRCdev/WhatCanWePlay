@@ -1,31 +1,39 @@
-#app-row-1 {
-    max-height: 80px;
-    height: 80px;
-}
-
-#app-table {
-    margin: auto;
-    padding-left: 40px;
-    padding-right: 40px;
+#app {
     width: 100%;
     height: 100%;
+    display: grid;
+    grid-template-rows: min-content auto;
+    grid-template-columns: auto 50%;
+    position:relative;
 }
 
-#app-table td {
+#app div{
     border-width: 10px;
     border-style: solid;
     border-color: #121212;
     border-radius: 5px;
 }
 
-#app-table #submit-cell {
-    border: none;
-    height:0px;
-    width: 50%;
+#app #submit-div {
+    grid-column: 2;
+    grid-row: 1;
+    min-height: 64px;
+    max-height: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
 }
 
-#users-cell {
-    height: 100%;
+#games-div {
+    grid-column: 2;
+    grid-row-start: 2;
+    grid-row-end: 3;
+}
+
+#users-div {
+    grid-column: 1;
+    grid-row-start: 1;
+    grid-row-end: 3;
 }
 
 #submit {
@@ -34,9 +42,10 @@
     border-radius: 5px;
     border-color: #608511;
     background-color: #608511;
-    width: 188px;
+    width: 80%;
     height: 64px;
     font-size: 30px;
+    margin: auto;
 }
 
 #submit:hover {
@@ -45,19 +54,77 @@
     background-color: #92d600;
 }
 
-@media (max-width:700px)
+/* Desktop only */
+@media (min-width:701px)
 {
-    #app-table {
-        width: 200%;
-        padding-left: 0;
-        padding-right: 0;
-        border-spacing: default;
+    #app {
+        column-gap: 20px;
+        row-gap: 5px;
+    }
+
+    #app #submit-div {
+        border: none;
     }
 }
 
-@media (min-width:701px)
+/* Mobile only */
+@media (max-width:701px)
 {
-    #app-table {
-        border-spacing: 20px;
+    #app {
+        padding-left: 0;
+        padding-right: 0;
+        border-spacing: default;
+        grid-template-rows: auto min-content;
+        width: 200%;
+        overflow:hidden;
+    }
+
+    #app div {
+        border-radius: 0;
+    }
+
+    #app #submit-div {
+        grid-column: 1;
+        grid-row: 2;
+        border-top-width: 0;
+    }
+
+    #submit {
+        border-radius: 0px;
+        width: 100%;
+        height: 100%;
+        font-size: 50px;
+    }
+
+    #app #games-div {
+        grid-row-start: 1;
+    }
+
+    #app #users-div {
+        grid-row-end: 1;
+    }
+
+    .scroll-to-games {
+        animation-name: find-games;
+        animation-duration: 1s;
+        animation-delay: 0s;
+        animation-fill-mode:forwards;
+    }
+
+    .scroll-to-users {
+        animation-name: select-users;
+        animation-duration: 1s;
+        animation-delay: 0s;
+        animation-fill-mode:forwards;
+    }
+
+    @keyframes find-games {
+        from {right:0%;}
+        to {right:100%;}
+    }
+
+    @keyframes select-users {
+        from {right:100%;}
+        to {right:0%;}
     }
 }

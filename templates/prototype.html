@@ -14,22 +14,16 @@
 
 {% block main %}
 
-<table id="app-table">
-    <tr id="app-row-1">
-        <td id="users-cell" rowspan="2">
-            users cell
-        </td>
-        <td id="submit-cell" style="text-align:center;">
-            <button id="submit">
-                Find Games
-            </button>
-        </td>
-    </tr>
-    <tr id="app-row-2">
-        <td id="games-cell">
-            games cell
-        </td>
-    </tr>
+<div id="app">
+    <div id="users-div">
+        users div
+    </div>
+    <div id="submit-div">
+        <button id="submit">Find Games</button>
+    </div>
+    <div id="games-div">
+        games div
+    </div>
 </table>
 
 {% endblock %}
