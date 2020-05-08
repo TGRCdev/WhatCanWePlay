@@ -72,7 +72,7 @@ def index():
     response = make_response(render_template("home.html", steam_info=steam_info))
 
     if errcode not in (0,1):
-        response.delete_cookie("steam_info")
+        response.set_cookie("steam_info", "", secure=True)
     
     return response
 
@@ -132,7 +132,7 @@ def steam_login():
 #@app.route("/steam_logout")
 def steam_logout():
     response = redirect(url_for("index"))
-    response.delete_cookie("steam_info")
+    response.set_cookie("steam_info", "", secure=True)
     return response
 
 def validate_steam_identity(params):
