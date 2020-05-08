@@ -26,6 +26,7 @@
     }
     #main-div {
         max-width: 800px;
+        margin-bottom:40px;
     }
 </style>
 {% endblock %}
@@ -48,7 +49,7 @@ This document describes what information we collect, how we use it, and how we s
         Most websites log this information. We will never link this data to individual user identities, such as Steam IDs.
     </dd>
     <dt>
-        <h3>1.2 Information Fetched From Steam</h3>
+        <h3>1.2 Information Given By Steam</h3>
     </dt>
     <dd>
         When you sign in with Steam, Steam provides us with the following information about you through the Steam Web API.
@@ -58,7 +59,7 @@ This document describes what information we collect, how we use it, and how we s
             <li>A link to your avatar picture</li>
             <li>The Steam games you own</li>
         </ul>
-        This information is retrieved solely to make the web app function. We can only retrieve this information if your Steam profile is set to Public.<br/>
+        This information is retrieved solely to make the web app function. We can only retrieve this information if your Steam profile visibility is set to Public.<br/>
         <br/>
         Steam also provides us the following information about the users on your Friends List through the Steam API.
         <ul>
@@ -67,9 +68,22 @@ This document describes what information we collect, how we use it, and how we s
             <li>Links to their avatar pictures</li>
             <li>The Steam games they own</li>
         </ul>
-        Again, this information is only used to make the app function, and can only be retrieved if your friends' profiles are set to Public.<br/>
+        Again, this information is only used to make the app function, and can only be retrieved if your friends' profiles have their visibility set to Public.<br/>
         <br/>
-        Both your information and your friends' information are encrypted and stored on your browser. We never store personal data on our servers.
+        Your personal information is encrypted and stored on your browser. We fetch your friends' information from Steam when you use the app. We never store personal data on our servers.<br/>
+    </dd>
+</dl>
+<h2>2. Information We Store</h2>
+<dl>
+    <dt>Cookies</dt>
+    <dd>
+        We store your Steam information in a small file on your browser called a "cookie". This cookie contains the following information.
+        <ul>
+            <li>Your Steam ID</li>
+            <li>Your Steam screen name</li>
+            <li>A link to your avatar picture</li>
+        </ul>
+        This information is stored so you do not have to log in every single time you want to use the app's functions. If you want to stop providing WhatCanWePlay your Steam information, you can click "Sign Out" on the web app interface, or <a href="steam_logout">click here.</a> Both methods will delete the cookie from your browser and prevent us from using your information any further. You can also manually delete the cookie, labeled "steam_info", using methods provided by your browser.
     </dd>
 </dl>
 {% endblock %}
