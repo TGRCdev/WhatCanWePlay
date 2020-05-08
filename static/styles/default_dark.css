@@ -18,8 +18,14 @@
 
 html {
     color: whitesmoke;
-    background-color: #131313;
+    background-color: #202020;
     font-family: "Trebuchet MS", Helvetica, sans-serif;
+}
+html a:link {
+    color: gray;
+}
+html a:visited {
+    color: gray;
 }
 html, body {
     min-height: 100%;
@@ -46,7 +52,11 @@ html, body {
     max-width: 1000px;
 }
 #footer-box {
-    background: #222222
+    background: #131313;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    text-align:center;
 }
 
 #title-link {
