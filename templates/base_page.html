@@ -38,7 +38,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         {% endblock %}
         <script>
             window.onload = function() {
-                this.document.getElementById("js-alert").remove()
+                this.document.getElementById("js-alert-container").remove()
                 var contact = this.document.getElementById("contact-link")
                 var mailto = ":otliam"
                 var user = "crgt"
@@ -54,7 +54,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                 <header id="base-header">
                     <a href="/">What Can We Play?</a>
                 </header>
-                <div id="js-alert">WhatCanWePlay requires JavaScript to function properly. Please enable JavaScript on your browser.</div>
+                <div id="js-alert-container">
+                    <div id="js-alert">WhatCanWePlay requires JavaScript to function properly. Please enable JavaScript on your browser.</div>
+                </div>
             </div>
             {% endblock %}
             <div id="main-div">

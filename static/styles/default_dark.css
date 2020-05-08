@@ -22,6 +22,14 @@ html {
     font-family: "Trebuchet MS", Helvetica, sans-serif;
 }
 
+#js-alert-container {
+    position: absolute;
+    top:100%;
+    z-index: 1;
+    width:100%;
+    overflow:hidden;
+}
+
 #js-alert {
     background-color: #991212;
     color: white;
@@ -31,9 +39,8 @@ html {
     animation-duration: 1s;
     animation-delay: 1s;
     animation-fill-mode: forwards;
-    top:-5%;
-    position: absolute;
-    z-index: -1;
+    bottom:-100vh;
+    position: relative;
     width: 100%;
 }
 
@@ -66,7 +73,6 @@ html, body {
     box-sizing: border-box;
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;
-    z-index:-2;
 }
 
 #steps {
@@ -85,7 +91,7 @@ html, body {
 
 #header-div {
     background: linear-gradient(#262626, #131313);
-    position:relative;
+    position: relative;
 }
 
 #base-header {
@@ -128,9 +134,9 @@ html, body {
 
 @keyframes js-alert-appear {
     from {
-        top: -5%;
+        bottom: 100%;
     }
     to {
-        top: 100%;
+        bottom: 0%;
     }
 }
