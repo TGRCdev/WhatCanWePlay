@@ -24,7 +24,7 @@ from igdb_utils import get_game_info, get_api_status
 from exceptions import SteamBadVanityUrlException
 from requests import HTTPError
 import secrets
-import datetime
+from datetime import timezone, datetime, timedelta
 from itsdangerous import URLSafeSerializer
 
 # Load config
@@ -34,6 +34,7 @@ igdb_key = config["igdb-key"]
 debug = config.get("debug", config.get("DEBUG", False))
 enable_api_tests = config.get("enable-api-tests", debug)
 cookie_max_age_dict = config.get("cookie-max-age", {})
+info_max_age_dict = config.get("info-max-age", {})
 
 # Create uWSGI callable
 app = Flask(__name__)
@@ -41,12 +42,15 @@ app.debug = debug
 app.secret_key = secrets.token_hex()
 
 # Setup cookie max_age
-cookie_max_age = datetime.timedelta(**cookie_max_age_dict).total_seconds()
+cookie_max_age = timedelta(**cookie_max_age_dict).total_seconds()
 if cookie_max_age == 0:
     cookie_max_age = None
-print("max cookie survive time: " + str(cookie_max_age))
+info_max_age = timedelta(**info_max_age_dict).total_seconds()
 
-def fetch_steam_info(cookie_data:str): # Returns a tuple of (invalid:bool, data:dict)
+print("cookies set to expire after {} seconds".format(cookie_max_age))
+print("steam info set to refresh after {} seconds".format(info_max_age))
+
+def fetch_steam_info(cookie_data:str): # Returns a tuple of (errcode:int, data:dict)
     if not cookie_data:
         return 1, None # No data
 
@@ -55,24 +59,63 @@ def fetch_steam_info(cookie_data:str): # Returns a tuple of (invalid:bool, data:
     if good_sig:
         try:
             steam_info = json.loads(steam_data)
-            required_keys = set(["steam_id", "screen_name", "avatar_thumb", "avatar"])
-            if len(set(steam_info.keys()) & required_keys) < len(required_keys):
+            full_keys = set(["steam_id", "screen_name", "avatar_thumb", "avatar", "expires"])
+
+            if "steam_id" not in steam_info.keys():
                 return 4, None # Good signature and loaded proper, but missing information
+            elif info_max_age == 0 or steam_info.get("expires", 0) <= datetime.now(timezone.utc).timestamp() or len(steam_info) != len(full_keys):
+                return 5, steam_info # Good signature and loaded proper, but needs to be refreshed    
+                    
             return 0, steam_info # Cookie has a good signature and loaded proper
         except json.JSONDecodeError:
             return 2, None # Cookie has invalid JSON data, throw out
     else:
         return 3, None # Cookie has a bad signature, throw out
 
+def refresh_steam_cookie(steam_info, response):
+    if not steam_info:
+        response.set_cookie("steam_info", "", secure=True)
+        return {}
+
+    steam_id = steam_info.get("steam_id", None)
+    if not steam_id or not response:
+        response.set_cookie("steam_info", "", secure=True)
+        return {}
+    
+    info = get_steam_user_info(steam_key, steam_id)
+
+    if info and info["exists"]:
+        steam_data = {
+            "steam_id": info["steamid"],
+            "screen_name": info["personaname"],
+            "avatar_thumb": info["avatarmedium"],
+            "avatar": info["avatarfull"],
+            "expires": datetime.now(timezone.utc).timestamp() + info_max_age,
+        }
+        auth_s = URLSafeSerializer(app.secret_key)
+        response.set_cookie(
+            "steam_info",
+            auth_s.dumps(json.dumps(steam_data if info_max_age != 0 else {"steam_id": info["steamid"]}, indent=None)),
+            max_age=cookie_max_age,
+            secure=True,
+            httponly=True,
+            samesite="Lax",
+        )
+        return steam_data
+    else:
+        response.set_cookie("steam_info", "", secure=True)
+        return {}
 
 @app.route('/')
 def index():
     errcode, steam_info = fetch_steam_info(request.cookies.get("steam_info", None))
-    
-    response = make_response(render_template("home.html", steam_info=steam_info))
+
+    response = Response()
 
     if errcode not in (0,1):
-        response.set_cookie("steam_info", "", secure=True)
+        steam_info = refresh_steam_cookie(steam_info, response)
+    
+    response.data = render_template("home.html", steam_info=steam_info)
     
     return response
 
@@ -80,14 +123,14 @@ def index():
 def prototype():
     return render_template("prototype.html", steam_info=session.get("steam_info", {}))
 
-@app.route("/steam_login", methods=["GET", "POST"])
+#@app.route("/steam_login", methods=["GET", "POST"])
 def login_disabled():
     return (
         'Steam login is currently disabled<br/><a href="/">Click here to go back home</a>',
         403
     )
 
-#@app.route("/steam_login", methods=["GET", "POST"])
+@app.route("/steam_login", methods=["GET", "POST"])
 def steam_login():
     if request.method == "POST":
         steam_openid_url = 'https://steamcommunity.com/openid/login'
@@ -104,32 +147,15 @@ def steam_login():
         auth_url = steam_openid_url + "?" + param_string
         return redirect(auth_url)
     
-    response = make_response(redirect(url_for("index")))
+    response = redirect(url_for("index"))
 
     if validate_steam_identity(dict(request.args)):
         steam_id = request.args["openid.identity"].rsplit("/")[-1]
-        info = get_steam_user_info(steam_key, steam_id)
-
-        if info and info["exists"]:
-            steam_data = {
-                "steam_id": info["steamid"],
-                "screen_name": info["personaname"],
-                "avatar_thumb": info["avatarmedium"],
-                "avatar": info["avatarfull"],
-            }
-            auth_s = URLSafeSerializer(app.secret_key)
-            response.set_cookie(
-                "steam_info",
-                auth_s.dumps(json.dumps(steam_data, indent=None)),
-                max_age=cookie_max_age,
-                secure=True,
-                httponly=True,
-                samesite="Lax",
-            )
+        refresh_steam_cookie({"steam_id": steam_id}, response)
     
     return response
 
-#@app.route("/steam_logout")
+@app.route("/steam_logout")
 def steam_logout():
     response = redirect(url_for("index"))
     response.set_cookie("steam_info", "", secure=True)

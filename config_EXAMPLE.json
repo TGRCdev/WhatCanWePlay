@@ -7,5 +7,9 @@
     "cookie-max-age": {
         "days": 0,
         "weeks": 0
+    },
+    "info-max-age": {
+        "hours": 0,
+        "minutes": 0
     }
 }
