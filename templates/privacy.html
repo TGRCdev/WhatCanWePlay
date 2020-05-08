@@ -1,5 +1,75 @@
-{% extends "base_page.html" %}
+{#
+    This file is a part of WhatCanWePlay
+    Copyright (C) 2020 TGRCDev
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+    
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#}
 
+{% extends "base_page.html" %}
+{% block title %}Privacy Policy{% endblock %}
+{% block styles %}
+{{ super() }}
+<style>
+    dl dd ul {
+        margin-left:10px;
+    }
+    #main-div {
+        max-width: 800px;
+    }
+</style>
+{% endblock %}
 {% block main %}
-TODO
+<h1 style="margin-left:auto;margin-right:auto;margin-top:20px;margin-bottom:20px;">Privacy Policy</h1>
+This document describes what information we collect, how we use it, and how we store it.
+<h2 style="margin-bottom:0;">1. Information We Collect</h2>
+<dl style="margin:0;">
+    <dt>
+        <h3>1.1 Information Collected Automatically</h3>
+    </dt>
+    <dd>
+        When you visit our website, we log the following information.
+        <ul>
+            <li>Your IP address</li>
+            <li>The web page you are trying to access</li>
+            <li>The browser you are using</li>
+            <li>The date and time</li>
+        </ul>
+        Most websites log this information. We will never link this data to individual user identities, such as Steam IDs.
+    </dd>
+    <dt>
+        <h3>1.2 Information Fetched From Steam</h3>
+    </dt>
+    <dd>
+        When you sign in with Steam, Steam provides us with the following information about you through the Steam Web API.
+        <ul>
+            <li>Your Steam ID</li>
+            <li>Your Steam screen name</li>
+            <li>A link to your avatar picture</li>
+            <li>The Steam games you own</li>
+        </ul>
+        This information is retrieved solely to make the web app function. We can only retrieve this information if your Steam profile is set to Public.<br/>
+        <br/>
+        Steam also provides us the following information about the users on your Friends List through the Steam API.
+        <ul>
+            <li>Their Steam IDs</li>
+            <li>Their Steam screen names</li>
+            <li>Links to their avatar pictures</li>
+            <li>The Steam games they own</li>
+        </ul>
+        Again, this information is only used to make the app function, and can only be retrieved if your friends' profiles are set to Public.<br/>
+        <br/>
+        Both your information and your friends' information are encrypted and stored on your browser. We never store personal data on our servers.
+    </dd>
+</dl>
 {% endblock %}
