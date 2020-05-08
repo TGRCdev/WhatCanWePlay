@@ -111,26 +111,24 @@ def index():
     errcode, steam_info = fetch_steam_info(request.cookies.get("steam_info", None))
 
     response = Response()
-
     if errcode not in (0,1):
         steam_info = refresh_steam_cookie(steam_info, response)
-    
     response.data = render_template("home.html", steam_info=steam_info)
     
     return response
 
 @app.route("/prototype")
 def prototype():
-    return render_template("prototype.html", steam_info=session.get("steam_info", {}))
+    return render_template("app.html", steam_info=session.get("steam_info", {}))
 
-#@app.route("/steam_login", methods=["GET", "POST"])
+@app.route("/steam_login", methods=["GET", "POST"])
 def login_disabled():
     return (
         'Steam login is currently disabled<br/><a href="/">Click here to go back home</a>',
         403
     )
 
-@app.route("/steam_login", methods=["GET", "POST"])
+#@app.route("/steam_login", methods=["GET", "POST"])
 def steam_login():
     if request.method == "POST":
         steam_openid_url = 'https://steamcommunity.com/openid/login'
@@ -155,7 +153,7 @@ def steam_login():
     
     return response
 
-@app.route("/steam_logout")
+#@app.route("/steam_logout")
 def steam_logout():
     response = redirect(url_for("index"))
     response.set_cookie("steam_info", "", secure=True)

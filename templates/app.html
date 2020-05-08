@@ -21,17 +21,28 @@
 {% block title %}What Can We Play?{% endblock %}
 {% block title_postfix %}{% endblock %}
 
+{% block styles %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='styles/wcwp_app.css') }}"/>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="{{ url_for('static', filename='scripts/wcwp_app.js') }}"></script>
+{% endblock %}
+
 {% block main %}
-<table class="table-center-contents" style="margin:auto;">
-    <tr><td><h1 style="margin-top:0;">STEP 1</h1></td></tr>
-    <tr><td>
-        <form action="steam_login" method="POST">
-            <input id="user-box" type="image" src="static/images/sits.png" alt="Sign in through Steam" />
-        </form>
-    </td></tr>
-    <tr><td><h1>STEP 2</h1></td></tr>
-    <tr><td>Select friends you want to play games with and click "Find Games"</td></tr>
-    <tr><td><h1>STEP 3</h1></td></tr>
-    <tr><td>Pick one and play together!</td></tr>
-</table>
+
+<div id="app">
+    <div id="users-div">
+        users div
+    </div>
+    <div id="submit-div">
+        <button id="submit">Find Games</button>
+    </div>
+    <div id="games-div">
+        games div
+    </div>
+</div>
+
 {% endblock %}

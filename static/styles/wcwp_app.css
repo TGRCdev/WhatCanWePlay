@@ -73,7 +73,6 @@
     #app {
         padding-left: 0;
         padding-right: 0;
-        border-spacing: default;
         grid-template-rows: auto min-content;
         width: 200%;
         overflow:hidden;
