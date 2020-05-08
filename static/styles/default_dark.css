@@ -27,10 +27,14 @@ html {
     color: white;
     font-weight: bold;
     text-align: center;
-}
-
-#js-alert-text {
-    margin: 0;
+    animation-name: js-alert-appear;
+    animation-duration: 1s;
+    animation-delay: 1s;
+    animation-fill-mode: forwards;
+    top:-5%;
+    position: absolute;
+    z-index: -1;
+    width: 100%;
 }
 
 a:link, a:visited {
@@ -62,6 +66,7 @@ html, body {
     box-sizing: border-box;
     -moz-box-sizing: border-box;
     -webkit-box-sizing: border-box;
+    z-index:-2;
 }
 
 #steps {
@@ -80,6 +85,7 @@ html, body {
 
 #header-div {
     background: linear-gradient(#262626, #131313);
+    position:relative;
 }
 
 #base-header {
@@ -120,8 +126,11 @@ html, body {
     text-decoration: none;
 }
 
-/* Desktop only */
-@media (min-width:701px)
-{
-
+@keyframes js-alert-appear {
+    from {
+        top: -5%;
+    }
+    to {
+        top: 100%;
+    }
 }
