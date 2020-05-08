@@ -38,7 +38,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         {% endblock %}
         <script>
             window.onload = function() {
-                this.document.getElementById("js-alert-container").remove()
+                //this.document.getElementById("js-alert-container").remove()
                 var contact = this.document.getElementById("contact-link")
                 var mailto = ":otliam"
                 var user = "crgt"
@@ -48,32 +48,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         </script>
     </head>
     <body>
-        <div id="main-flexbox">
-            {% block header %}
-            <div id="header-div">
-                <header id="base-header">
-                    <a href="/">What Can We Play?</a>
-                </header>
-                <div id="js-alert-container">
-                    <div id="js-alert">WhatCanWePlay requires JavaScript to function properly. Please enable JavaScript on your browser.</div>
-                </div>
+        <div id="page-flexbox">
+            <div id="header-box">
+                <a id="title-link">What Can We Play?</a>
             </div>
-            {% endblock %}
-            <div id="main-div">
-                {% block main %}{% endblock %}
+            <div id="body-box">
             </div>
-            {% block footer %}
-            <div id="footer-div">
-                <footer id="base-footer">
-                    <div id="copyright">© 2020 TGRCDev</div>
-                    <nav id="footer-nav">
-                        <a href="privacy">Privacy Policy</a> | 
-                        <a href="{{ source_url }}">Source Code</a> |
-                        <a id="contact-link">Contact Me</a>
-                    </nav>
-                </footer>
+            <div id="footer-box">
+
             </div>
-            {% endblock %}
         </div>
     </body>
 </html>
