@@ -35,6 +35,7 @@ debug = config.get("debug", config.get("DEBUG", False))
 enable_api_tests = config.get("enable-api-tests", debug)
 cookie_max_age_dict = config.get("cookie-max-age", {})
 info_max_age_dict = config.get("info-max-age", {})
+source_url = config.get("source-url", "")
 
 # Create uWSGI callable
 app = Flask(__name__)
@@ -113,13 +114,17 @@ def index():
     response = Response()
     if errcode not in (0,1):
         steam_info = refresh_steam_cookie(steam_info, response)
-    response.data = render_template("home.html", steam_info=steam_info)
+    response.data = render_template("home.html", steam_info=steam_info, source_url=source_url)
     
     return response
 
+@app.route("/privacy")
+def privacy():
+    return render_template("privacy.html", source_url=source_url)
+
 @app.route("/prototype")
 def prototype():
-    return render_template("app.html", steam_info=session.get("steam_info", {}))
+    return render_template("app.html", steam_info=session.get("steam_info", {}), source_url=source_url)
 
 @app.route("/steam_login", methods=["GET", "POST"])
 def login_disabled():

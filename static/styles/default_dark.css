@@ -27,8 +27,6 @@ html {
     color: white;
     font-weight: bold;
     text-align: center;
-    max-height: 25px;
-    height: 20px;
 }
 
 #js-alert-text {
@@ -71,21 +69,38 @@ html, body {
 }
 
 #base-header, #base-footer {
-    margin:0;
     max-height: 56px;
     min-height: 56px;
     height: 56px;
     display: flex;
 }
 
-#base-header {
+#header-div {
     background: linear-gradient(#262626, #131313);
+}
+
+#base-header {
     font-weight:bold;
     font-size: 27px;
 }
 
-#base-footer {
+#footer-div {
     background: #131313;
+}
+
+#base-footer {
+    max-width: 1000px;
+    margin: auto;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    justify-content: space-around;
+}
+
+#base-footer * {
+    margin-top: auto;
+    margin-bottom: auto;
+    text-align:center;
 }
 
 #base-header a {
@@ -105,6 +120,7 @@ html, body {
 /* Desktop only */
 @media (min-width:701px)
 {
+
     #main-div {
         padding: 15px;
     }

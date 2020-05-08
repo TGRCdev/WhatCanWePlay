@@ -39,6 +39,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         <script>
             window.onload = function() {
                 this.document.getElementById("js-alert").remove()
+                var contact = this.document.getElementById("contact-link")
+                var mailto = ":otliam"
+                var user = "crgt"
+                var address = "ved.crgt@"
+                contact.href = mailto.split("").reverse().join("") + user.split("").reverse().join("") + address.split("").reverse().join("")
             }
         </script>
     </head>
@@ -58,7 +63,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             {% block footer %}
             <div id="footer-div">
                 <footer id="base-footer">
-                    
+                    <div id="copyright">© 2020 TGRCDev</div>
+                    <nav id="footer-nav">
+                        <a href="privacy">Privacy Policy</a> | 
+                        <a href="{{ source_url }}">Source Code</a> |
+                        <a id="contact-link">Contact Me</a>
+                    </nav>
                 </footer>
             </div>
             {% endblock %}

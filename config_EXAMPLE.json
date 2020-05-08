@@ -11,5 +11,6 @@
     "info-max-age": {
         "hours": 0,
         "minutes": 0
-    }
+    },
+    "source-url": "https://git.tgrc.dev/tgrcdev/whatcanweplay"
 }
