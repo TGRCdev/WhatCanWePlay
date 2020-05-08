@@ -59,6 +59,9 @@ html, body {
     height:100%;
     overflow:hidden;
     display:flex;
+    box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
 }
 
 #steps {
@@ -121,7 +124,4 @@ html, body {
 @media (min-width:701px)
 {
 
-    #main-div {
-        padding: 15px;
-    }
 }
