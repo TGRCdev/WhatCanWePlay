@@ -42,20 +42,26 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             }
         </script>
     </head>
-    <body><table id="main-table">
-        
-        {% block header %}
-        <tr><td id="header-row">
-            <header id="base-header">
-                <a href="/">What Can We Play?</a>
-            </header>
-        </td></tr>
-        {% endblock %}
-        <tr id="js-alert"><td id="js-alert-cell">
-            <div id="js-alert-text">WhatCanWePlay requires JavaScript to function properly. Please enable JavaScript on your browser.</div>
-        </td></tr>
-        <tr><td id="main-row"><div id="main-div">
-            {% block main %}{% endblock %}
-        </div></td></tr>
-    </table></body>
+    <body>
+        <div id="main-flexbox">
+            {% block header %}
+            <div id="header-div">
+                <header id="base-header">
+                    <a href="/">What Can We Play?</a>
+                </header>
+            </div>
+            {% endblock %}
+            <div id="js-alert">WhatCanWePlay requires JavaScript to function properly. Please enable JavaScript on your browser.</div>
+            <div id="main-div">
+                {% block main %}{% endblock %}
+            </div>
+            {% block footer %}
+            <div id="footer-div">
+                <footer id="base-footer">
+                    
+                </footer>
+            </div>
+            {% endblock %}
+        </div>
+    </body>
 </html>

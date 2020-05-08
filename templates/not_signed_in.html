@@ -22,16 +22,16 @@
 {% block title_postfix %}{% endblock %}
 
 {% block main %}
-<table class="table-center-contents" style="margin:auto;">
-    <tr><td><h1 style="margin-top:0;">STEP 1</h1></td></tr>
-    <tr><td>
+<div id="steps">
+    <div><h1 style="margin-top:0;">STEP 1</h1></div>
+    <div>
         <form action="steam_login" method="POST">
             <input id="user-box" type="image" src="static/images/sits.png" alt="Sign in through Steam" />
         </form>
-    </td></tr>
-    <tr><td><h1>STEP 2</h1></td></tr>
-    <tr><td>Select friends you want to play games with and click "Find Games"</td></tr>
-    <tr><td><h1>STEP 3</h1></td></tr>
-    <tr><td>Pick one and play together!</td></tr>
-</table>
+    </div>
+    <div><h1>STEP 2</h1></div>
+    <div>Select friends you want to play games with and click "Find Games"</div>
+    <div><h1>STEP 3</h1></div>
+    <div>Pick one and play together!</div>
+</div>
 {% endblock %}
