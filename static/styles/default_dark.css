@@ -18,32 +18,48 @@
 
 html {
     color: whitesmoke;
-    background-color: #262626;
+    background-color: #131313;
     font-family: "Trebuchet MS", Helvetica, sans-serif;
 }
-
 html, body {
     min-height: 100%;
     height: 100%;
     margin: 0;
 }
-
 #page-flexbox {
     display: flex;
-    width: 100%;
     min-height: 100%;
     flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#header-box, #footer-box {
+    height: 56px;
+    width: 100%;
 }
 
 #header-box {
-    width: 100%;
-    height: 56px;
     background: linear-gradient(#262626, #131313)
 }
+#body-box * {
+    max-width: 1000px;
+}
+#footer-box {
+    background: #222222
+}
+
 #title-link {
     display:block;
     margin:auto;
     text-align:center;
     font-size: 35px;
     padding-top:7px;
+    text-decoration: none;
+}
+#title-link:link {
+    color: whitesmoke;
+}
+#title-link:visited {
+    color: whitesmoke;
 }
