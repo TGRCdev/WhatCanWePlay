@@ -18,23 +18,12 @@
 
 {% extends "base_page.html" %}
 {% block title %}Privacy Policy{% endblock %}
-{% block styles %}
-{{ super() }}
-<style>
-    dl dd ul {
-        margin-left:10px;
-    }
-    #main-div {
-        max-width: 800px;
-        margin-bottom:40px;
-    }
-</style>
-{% endblock %}
-{% block main %}
-<h1 style="margin-left:auto;margin-right:auto;margin-top:20px;margin-bottom:20px;">Privacy Policy</h1>
+
+{% block content %}
+<h1 style="text-align:center">Privacy Policy</h1>
 This document describes what information we collect, how we use it, and how we store it.
-<h2 style="margin-bottom:0;">1. Information We Collect</h2>
-<dl style="margin:0;">
+<h2>1. Information We Collect</h2>
+<dl>
     <dt>
         <h3>1.1 Information Collected Automatically</h3>
     </dt>
@@ -75,15 +64,29 @@ This document describes what information we collect, how we use it, and how we s
 </dl>
 <h2>2. Information We Store</h2>
 <dl>
-    <dt>Cookies</dt>
+    <dt><h3>2.1 Cookies</h3></dt>
     <dd>
-        We store your Steam information in a small file on your browser called a "cookie". This cookie contains the following information.
+        When you sign in with Steam, we store your Steam information in a small file on your browser called a "cookie". This cookie contains the following information.
         <ul>
             <li>Your Steam ID</li>
             <li>Your Steam screen name</li>
             <li>A link to your avatar picture</li>
         </ul>
-        This information is stored so you do not have to log in every single time you want to use the app's functions. If you want to stop providing WhatCanWePlay your Steam information, you can click "Sign Out" on the web app interface, or <a href="steam_logout">click here.</a> Both methods will delete the cookie from your browser and prevent us from using your information any further. You can also manually delete the cookie, labeled "steam_info", using methods provided by your browser.
+        This information is stored so you do not have to log in every single time you want to use the app's functions.<br/>
+        <br/>
+        If you want to stop providing WhatCanWePlay with your Steam information, you can click "Sign Out" on the web app interface, or <a href="steam_logout">click here</a>. Both methods will delete the cookie from your browser and prevent us from using your information any further. You can also manually delete the cookie, labeled "steam_info", using methods provided by your browser.
+    </dd>
+    <dt><h3>2.2 Game Info</h3></dt>
+    <dd>
+        When you use the app to find games, we take the App IDs of the games you and your friends own and fetch the following information from the <a href="https://www.igdb.com">IGDB</a>.
+        <ul>
+            <li>The name of the game</li>
+            <li>A link to a banner picture for the game</li>
+            <li>A list of tags associated with the game</li>
+            <li>The gamemodes that the game supports (i.e. Singleplayer, Multiplayer)</li>
+            <li>The number of players supported by the Multiplayer mode, if supported.</li>
+        </ul>
+        None of this information is personally linked to you or your friends in any way. This information is stored on our servers to reduce the number of requests we make to the <a href="https://www.igdb.com">IGDB</a>.
     </dd>
 </dl>
 {% endblock %}
