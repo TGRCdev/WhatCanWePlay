@@ -21,7 +21,6 @@ from werkzeug.exceptions import BadRequest
 import json
 from steam_utils import get_steam_user_info
 from igdb_utils import get_game_info, get_api_status
-from exceptions import SteamBadVanityUrlException
 from requests import HTTPError
 import secrets
 from datetime import timezone, datetime, timedelta
@@ -96,23 +95,16 @@ def refresh_steam_cookie(steam_info, response):
     info = get_steam_user_info(steam_key, steam_id)
 
     if info and info["exists"]:
-        steam_data = {
-            "steam_id": info["steamid"],
-            "screen_name": info["personaname"],
-            "avatar_thumb": info["avatar"],
-            "avatar": info["avatarmedium"],
-            "expires": datetime.now(timezone.utc).timestamp() + info_max_age,
-        }
         auth_s = URLSafeSerializer(app.secret_key)
         response.set_cookie(
             "steam_info",
-            auth_s.dumps(json.dumps(steam_data if info_max_age != 0 else {"steam_id": info["steamid"]}, indent=None)),
+            auth_s.dumps(json.dumps(info if info_max_age > 0 else {"steam_id": info["steamid"]}, indent=None)),
             max_age=cookie_max_age,
             secure=True,
             httponly=True,
             samesite="Lax",
         )
-        return steam_data
+        return info
     else:
         response.set_cookie("steam_info", "", secure=True)
         return {}

@@ -12,5 +12,9 @@
         "hours": 0,
         "minutes": 0
     },
-    "source-url": "https://git.tgrc.dev/tgrcdev/whatcanweplay"
+    "source-url": "https://git.tgrc.dev/tgrcdev/whatcanweplay",
+    "contact-email": "contact@whatcanweplay.net",
+    "privacy-email": "privacy@whatcanweplay.net",
+    "connect-timeout": 8,
+    "read-timeout": 30
 }
