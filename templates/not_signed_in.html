@@ -21,17 +21,15 @@
 {% block title %}What Can We Play?{% endblock %}
 {% block title_postfix %}{% endblock %}
 
-{% block main %}
-<div id="steps">
-    <div><h1 style="margin-top:0;">STEP 1</h1></div>
-    <div>
-        <form action="steam_login" method="POST">
-            <input id="user-box" type="image" src="static/images/sits.png" alt="Sign in through Steam" />
-        </form>
-    </div>
-    <div><h1>STEP 2</h1></div>
-    <div>Select friends you want to play games with and click "Find Games"</div>
-    <div><h1>STEP 3</h1></div>
-    <div>Pick one and play together!</div>
+{% block content %}
+<div style="text-align:center">
+    <h1 style="margin-top:0">STEP 1</h1>
+    <form action="steam_login" method="POST">
+        <input id="user-box" type="image" src="static/images/sits.png" alt="Sign in through Steam" />
+    </form>
+    <h1>STEP 2</h1>
+    Select the friends you want to play games with and click "Find Games"
+    <h1>STEP 3</h1>
+    Pick one and play together!
 </div>
 {% endblock %}
