@@ -19,7 +19,7 @@ import requests
 from urllib import parse
 from werkzeug.exceptions import BadRequest
 import json
-from steam_utils import get_steam_id, get_steam_user_info
+from steam_utils import get_steam_user_info
 from igdb_utils import get_game_info, get_api_status
 from exceptions import SteamBadVanityUrlException
 from requests import HTTPError
@@ -36,6 +36,8 @@ enable_api_tests = config.get("enable-api-tests", debug)
 cookie_max_age_dict = config.get("cookie-max-age", {})
 info_max_age_dict = config.get("info-max-age", {})
 source_url = config.get("source-url", "")
+contact_email = config["contact-email"]
+privacy_email = config.get("privacy-email", contact_email)
 
 # Create uWSGI callable
 app = Flask(__name__)
@@ -50,6 +52,14 @@ info_max_age = timedelta(**info_max_age_dict).total_seconds()
 
 print("cookies set to expire after {} seconds".format(cookie_max_age))
 print("steam info set to refresh after {} seconds".format(info_max_age))
+
+def basic_info_dict():
+    email_rev = contact_email.split("@")
+    return {
+        "contact_email_user_reversed": email_rev[0][::-1],
+        "contact_email_domain_reversed": email_rev[1][::-1],
+        "source_url": source_url
+    }
 
 def fetch_steam_info(cookie_data:str): # Returns a tuple of (errcode:int, data:dict)
     if not cookie_data:
@@ -89,8 +99,8 @@ def refresh_steam_cookie(steam_info, response):
         steam_data = {
             "steam_id": info["steamid"],
             "screen_name": info["personaname"],
-            "avatar_thumb": info["avatarmedium"],
-            "avatar": info["avatarfull"],
+            "avatar_thumb": info["avatar"],
+            "avatar": info["avatarmedium"],
             "expires": datetime.now(timezone.utc).timestamp() + info_max_age,
         }
         auth_s = URLSafeSerializer(app.secret_key)
@@ -114,17 +124,13 @@ def index():
     response = Response()
     if errcode not in (0,1):
         steam_info = refresh_steam_cookie(steam_info, response)
-    response.data = render_template("home.html", steam_info=steam_info, source_url=source_url)
+    response.data = render_template("home.html", steam_info=steam_info, **basic_info_dict())
     
     return response
 
 @app.route("/privacy")
 def privacy():
-    return render_template("privacy.html", source_url=source_url)
-
-@app.route("/prototype")
-def prototype():
-    return render_template("app.html", steam_info=session.get("steam_info", {}), source_url=source_url)
+    return render_template("privacy.html", privacy_email=privacy_email, **basic_info_dict())
 
 @app.route("/steam_login", methods=["GET", "POST"])
 def login_disabled():

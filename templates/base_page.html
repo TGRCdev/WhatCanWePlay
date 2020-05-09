@@ -41,9 +41,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                 //this.document.getElementById("js-alert-container").remove()
                 var contact = this.document.getElementById("contact-link")
                 var mailto = ":otliam"
-                var user = "crgt"
-                var address = "ved.crgt@"
-                contact.href = mailto.split("").reverse().join("") + user.split("").reverse().join("") + address.split("").reverse().join("")
+                var user = "{{ contact_email_user_reversed }}"
+                var address = "{{ contact_email_domain_reversed }}"
+                contact.href = mailto.split("").reverse().join("") + user.split("").reverse().join("") + "@" + address.split("").reverse().join("")
             }
         </script>
     </head>

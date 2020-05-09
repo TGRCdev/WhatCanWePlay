@@ -29,6 +29,7 @@ html a:visited {
 }
 html, body {
     min-height: 100%;
+    min-width: 320px;
     height: 100%;
     margin: 0;
 }
@@ -57,6 +58,9 @@ html, body {
     justify-content: space-between;
     align-items: center;
     text-align:center;
+    box-sizing: border-box;
+    padding-left: 15px;
+    padding-right: 15px;
 }
 
 #title-link {
