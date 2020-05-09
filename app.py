@@ -164,7 +164,7 @@ def steam_login():
     
     return response
 
-#@app.route("/steam_logout")
+@app.route("/steam_logout")
 def steam_logout():
     response = redirect(url_for("index"))
     response.set_cookie("steam_info", "", secure=True)
