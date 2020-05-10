@@ -40,12 +40,15 @@ function createTypeInput(type)
             input = document.createElement("input")
             input.type = "number"
             input.placeholder = "int"
+            break;
         case "bool":
             input = document.createElement("input")
             input.type = "checkbox"
+            break;
         default:
             input = document.createElement("input")
             input.type = "text"
+            break;
     }
 
     return input;
@@ -167,6 +170,9 @@ function getAndSubmit()
                 }
                 value = list
                 break;
+            case "bool":
+                value = elem.checked
+                break;
             default:
                 break;
         }
@@ -181,5 +187,5 @@ function getAndSubmit()
             method: 'post',
             body: JSON.stringify(request_data)
         })
-    , 5000).then(responseReceived).catch(responseTimeout)
+    , 10000).then(responseReceived).catch(responseTimeout)
 }

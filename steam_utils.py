@@ -17,8 +17,12 @@
 import requests
 from requests.exceptions import ConnectTimeout, ReadTimeout
 from typing import Mapping, Any, Collection, Dict, List, Optional
+import json
 
 api_base = "https://api.steampowered.com/"
+
+config = json.load(open("config.json", "r"))
+debug = config.get("debug", config.get("DEBUG", False))
 
 # Fetches public information about a list of Steam users
 #
@@ -45,7 +49,7 @@ def get_steam_user_info(webkey: str, steamids: Collection[int], connect_timeout:
         return {"errcode": 0, "users":{}} # Technically not an error
     
     return_dict = {"errcode": 0}
-    user_dict = {steam_id: {"exists": False} for steam_id in steamids}
+    user_dict = {int(steam_id): {"exists": False} for steam_id in steamids}
 
     retrieved_users = 0
     while retrieved_users < len(steamids):
@@ -65,6 +69,8 @@ def get_steam_user_info(webkey: str, steamids: Collection[int], connect_timeout:
         if r.status_code == 403:
             return {"errcode": 1}
         elif r.status_code != 200:
+            if debug:
+                r.raise_for_status()
             return {"errcode": -1}
 
         response = r.json()["response"]
@@ -114,16 +120,19 @@ def get_owned_steam_games(webkey: str, steamid: int, include_free_games: bool=Fa
         return {"errcode": 2}
     except ReadTimeout:
         return {"errcode": 3}
+
     if r.status_code == 403:
         return {"errcode": 1}
     elif r.status_code != 200:
+        if debug:
+            r.raise_for_status()
         return {"errcode": -1}
 
     response = r.json()["response"]
     if not "game_count" in response.keys():
         return {"errcode": 4}
     else:
-        return {"errcode": 0, "games": response.get("games", [])}
+        return {"errcode": 0, "games": [game["appid"] for game in response.get("games", [])]}
 
 # Fetch a list of Steam IDs that are friends with the user
 #
@@ -156,6 +165,8 @@ def get_steam_user_friend_list(webkey: str, steamid: int, connect_timeout: float
     if r.status_code == 403:
         return {"errcode": 1}
     elif r.status_code != 200:
+        if debug:
+            r.raise_for_status()
         return {"errcode": -1}
     
     response = r.json()

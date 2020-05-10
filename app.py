@@ -19,7 +19,7 @@ import requests
 from urllib import parse
 from werkzeug.exceptions import BadRequest
 import json
-from steam_utils import get_steam_user_info, get_steam_user_friend_list
+from steam_utils import get_steam_user_info, get_steam_user_friend_list, get_owned_steam_games
 #from igdb_utils import get_game_info, get_api_status
 from requests import HTTPError
 import secrets
@@ -47,7 +47,7 @@ if read_timeout <= 0.0:
 # Create uWSGI callable
 app = Flask(__name__)
 app.debug = debug
-app.secret_key = secrets.token_hex()
+app.secret_key = secrets.token_hex() if not app.debug else "DEBUG_SECRET_KEY_BANANA_BREAD" # Prevents invalidating cookies when hot-reloading
 
 # Setup cookie max_age
 cookie_max_age = timedelta(**cookie_max_age_dict).total_seconds()
@@ -185,8 +185,11 @@ def validate_steam_identity(params):
         return False
 
 # API stuff
-@app.route("/api/v1/get_friend_list", methods=["GET", "POST"] if app.debug else ["POST"])
-def get_friend_list():
+
+# Get the Friend List of the currently signed in user
+# Returns: A list of strings of Steam IDs on this users' friends list
+@app.route("/api/v1/get_friend_list", methods=["GET", "POST"] if enable_api_tests else ["POST"])
+def get_friend_list_v1():
     if request.method == "GET":
         return render_template(
             "api_test.html",
@@ -218,7 +221,56 @@ def get_friend_list():
     elif errcode == -1:
         return ("An unknown error occurred", 500)
     
-    return jsonify(friends_info["friends"])
+    return jsonify([str(id) for id in friends_info["friends"]])
+
+@app.route("/api/v1/get_steam_user_info", methods=["GET", "POST"] if enable_api_tests else ["POST"])
+def get_steam_user_info_v1():
+    if request.method == "GET":
+        params = [
+            {"name": "steamids", "type":"csl:string"}
+        ]
+        return render_template(
+            "api_test.html",
+            api_function_name="get_steam_user_info",
+            api_version="v1",
+            api_function_params=json.dumps(params)
+        )
+    
+    errcode, steam_info = fetch_steam_cookie(request)
+    if "steam_id" not in steam_info.keys():
+        return ("Not signed in to Steam. errcode {}".format(errcode), 403)
+    
+    body = request.get_json(force=True, silent=True) or {}
+
+    if "steamids" not in body.keys():
+        return ("Missing required field \"steamids\"", 400)
+    
+    try:
+        steamids = body["steamids"]
+        if len(steamids) == 0:
+            return ("steamids is empty", 400)
+        steamids = list(map(int, steamids))
+    except (ValueError, TypeError):
+        return ("steamids must be an integer or a string parseable to an integer", 400)
+    
+    friend_info = get_steam_user_info(steam_key, steamids, connect_timeout, read_timeout)
+
+    errcode = friend_info.pop("errcode")
+    if errcode == 1:
+        return ("Site has bad Steam API key. Please contact us about this error at " + contact_email, 500)
+    elif errcode == 2:
+        return ("Steam took too long to respond", 500)
+    elif errcode == 3:
+        return ("Steam took too long to transmit info", 500)
+    elif errcode == -1:
+        return ("An unknown error occurred", 500)
+    
+    for user in friend_info["users"].values():
+        if "steam_id" in user.keys():
+            user["steam_id"] = str(user["steam_id"])
+
+    return jsonify(friend_info["users"])
+
 
 if __name__ == "__main__":
     app.run()
