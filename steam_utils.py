@@ -16,7 +16,7 @@
 
 import requests
 from requests.exceptions import ConnectTimeout, ReadTimeout
-from typing import Mapping, Any, Collection, Dict, List
+from typing import Mapping, Any, Collection, Dict, List, Optional
 
 api_base = "https://api.steampowered.com/"
 
@@ -40,7 +40,7 @@ api_base = "https://api.steampowered.com/"
 # ["avatar_thumb"]: A url to a 32x32 size version of their Steam avatar picture
 # ["avatar"]: A url to a 64x64 size version of their Steam avatar picture
 # ["visibility"]: The user's profile visibility. 1 = Private, 2 = Friends Only, 3 = Public
-def get_steam_user_info(webkey: str, steamids: Collection[int], connect_timeout: int = 0, read_timeout: int = 0) -> Dict[int, Dict[str, Any]]:
+def get_steam_user_info(webkey: str, steamids: Collection[int], connect_timeout: Optional[float] = None, read_timeout: Optional[float] = None) -> Dict[int, Dict[str, Any]]:
     if len(steamids) == 0:
         return {"errcode": 0, "users":{}} # Technically not an error
     
@@ -50,10 +50,14 @@ def get_steam_user_info(webkey: str, steamids: Collection[int], connect_timeout:
     retrieved_users = 0
     while retrieved_users < len(steamids):
         request_users = steamids[retrieved_users:100]
-        steamid_str = ",".join(request_users)
+        steamid_str = ",".join(map(str, request_users))
         retrieved_users += len(request_users)
         try:
-            r = requests.get(api_base + "ISteamUser/GetPlayerSummaries/v2/", {"key": webkey, "steamids": steamid_str, "format":"json"}, timeout=(connect_timeout, read_timeout))
+            r = requests.get(
+                api_base + "ISteamUser/GetPlayerSummaries/v2/",
+                {"key": webkey, "steamids": steamid_str, "format":"json"},
+                timeout=(connect_timeout, read_timeout)
+            )
         except ConnectTimeout:
             return {"errcode": 2}
         except ReadTimeout:
@@ -68,7 +72,7 @@ def get_steam_user_info(webkey: str, steamids: Collection[int], connect_timeout:
         for user in response["players"]:
             if user.get("profilestate", 0) == 1:
                 user_info = {"exists": True}
-                steam_id = user["steamid"]
+                steam_id = int(user["steamid"])
                 user_info["steam_id"] = steam_id
                 user_info["screen_name"] = user["personaname"]
                 user_info["avatar_thumb"] = user["avatar"]
@@ -85,7 +89,7 @@ def get_steam_user_info(webkey: str, steamids: Collection[int], connect_timeout:
 # Returns: Dictionary
 # ["errcode"]: Integer code that explains what kind of error occurred, if one did.
 #
-# get_steam_user_info errcodes:
+# get_owned_steam_games errcodes:
 #    0: no error
 #    1: bad api key
 #    2: connect timeout (Steam took too long to respond)
@@ -94,9 +98,18 @@ def get_steam_user_info(webkey: str, steamids: Collection[int], connect_timeout:
 #    -1: unknown error
 #
 # ["games"]: List of owned Steam App IDs
-def get_owned_steam_games(webkey: str, steamid: int, include_free_games: bool=False) -> List[int]:
+def get_owned_steam_games(webkey: str, steamid: int, include_free_games: bool=False, connect_timeout: float = 0.0, read_timeout: float = 0.0) -> Dict[str, Any]:
     try:
-        r = requests.get(api_base + "IPlayerService/GetOwnedGames/v0001/", {"key": webkey, "steamid": steamid, "include_appinfo": False, "include_played_free_games": include_free_games, "format": "json"})
+        r = requests.get(
+            api_base + "IPlayerService/GetOwnedGames/v0001/",
+            {
+                "key": webkey,
+                "steamid": steamid,
+                "include_appinfo": False,
+                "include_played_free_games": include_free_games,
+                "format": "json"},
+                timeout=(connect_timeout, read_timeout)
+        )
     except ConnectTimeout:
         return {"errcode": 2}
     except ReadTimeout:
@@ -109,18 +122,15 @@ def get_owned_steam_games(webkey: str, steamid: int, include_free_games: bool=Fa
     response = r.json()["response"]
     if not "game_count" in response.keys():
         return {"errcode": 4}
-    elif response["game_count"] == 0:
-        return {"errcode": 0, "games": []} # Technically not an error
-    games = response["games"]
-
-    return games
+    else:
+        return {"errcode": 0, "games": response.get("games", [])}
 
 # Fetch a list of Steam IDs that are friends with the user
 #
 # Returns: Dictionary
 # ["errcode"]: Integer code that explains what kind of error occurred, if one did.
 #
-# get_steam_user_info errcodes:
+# get_steam_user_friend_list errcodes:
 #    0: no error
 #    1: bad api key
 #    2: connect timeout (Steam took too long to respond)
@@ -129,9 +139,16 @@ def get_owned_steam_games(webkey: str, steamid: int, include_free_games: bool=Fa
 #    -1: unknown error
 #
 # ["friends"]: List of Steam IDs that are friends
-def get_steam_user_friend_list(webkey: str, steamid: int) -> List[int]:
+def get_steam_user_friend_list(webkey: str, steamid: int, connect_timeout: float = 0, read_timeout: float = 0) -> Dict[str, Any]:
     try:
-        r = requests.get(api_base + "ISteamUser/GetFriendList/v0001/", {"key": webkey, "steamid": steamid, "relationship": "friend", "format": "json"})
+        r = requests.get(
+            api_base + "ISteamUser/GetFriendList/v0001/",
+            {"key": webkey,
+            "steamid": steamid,
+            "relationship": "friend",
+            "format": "json"},
+            timeout=(connect_timeout, read_timeout)
+        )
     except ConnectTimeout:
         return {"errcode": 2}
     except ReadTimeout:
@@ -145,4 +162,4 @@ def get_steam_user_friend_list(webkey: str, steamid: int) -> List[int]:
     if "friendslist" not in response.keys() or "friends" not in response["friendslist"].keys():
         return {"errcode": 4}
     else:
-        return response["friendslist"]["friends"]
+        return {"errcode": 0, "friends": [int(friend["steamid"]) for friend in response["friendslist"]["friends"]]}

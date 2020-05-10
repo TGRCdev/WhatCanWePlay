@@ -112,8 +112,18 @@ function responseReceived(response)
 {
     var response_box = document.getElementById("response")
     var submit_button = document.getElementById("submit-request")
-    response.text().then(function(text){response_box.innerHTML = text;submit_button.disabled = false;})
+    response.text().then(
+        function(text){response_box.innerHTML = text;submit_button.disabled = false;}
+    )
     // i hate futures so much
+}
+
+function responseTimeout()
+{
+    var response_box = document.getElementById("response")
+    var submit_button = document.getElementById("submit-request")
+    response_box.innerHTML = "API request timed out"
+    submit_button.disabled = false;
 }
 
 function getAndSubmit()
@@ -166,8 +176,10 @@ function getAndSubmit()
 
     response_box.placeholder = "Waiting for response..."
     console.log(JSON.stringify(request_data))
-    fetch("", {
-        method: 'post',
-        body: JSON.stringify(request_data)
-    }).then(responseReceived)
+    timeout(
+        fetch("", {
+            method: 'post',
+            body: JSON.stringify(request_data)
+        })
+    , 5000).then(responseReceived).catch(responseTimeout)
 }

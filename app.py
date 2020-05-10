@@ -19,8 +19,8 @@ import requests
 from urllib import parse
 from werkzeug.exceptions import BadRequest
 import json
-from steam_utils import get_steam_user_info
-from igdb_utils import get_game_info, get_api_status
+from steam_utils import get_steam_user_info, get_steam_user_friend_list
+#from igdb_utils import get_game_info, get_api_status
 from requests import HTTPError
 import secrets
 from datetime import timezone, datetime, timedelta
@@ -37,6 +37,12 @@ info_max_age_dict = config.get("info-max-age", {})
 source_url = config.get("source-url", "")
 contact_email = config["contact-email"]
 privacy_email = config.get("privacy-email", contact_email)
+connect_timeout = config.get("connect-timeout", 0.0)
+if connect_timeout <= 0.0:
+    connect_timeout = None
+read_timeout = config.get("read-timeout", 0.0)
+if read_timeout <= 0.0:
+    read_timeout = None
 
 # Create uWSGI callable
 app = Flask(__name__)
@@ -60,64 +66,70 @@ def basic_info_dict():
         "source_url": source_url
     }
 
-def fetch_steam_info(cookie_data:str): # Returns a tuple of (errcode:int, data:dict)
-    if not cookie_data:
-        return 1, None # No data
+# Tries to fetch the Steam info cookie, returns an errcode and a dict
+#
+# Errcodes:
+#     0: no error, info returned. (will also return this if no cookie is present)
+#     1: bad cookie sig
+#     2: bad cookie JSON format
+#     3: info returned, but out of date (refresh recommended)
+def fetch_steam_cookie(request):
+    cookie_str = request.cookies.get("steam_info")
 
-    auth_s = URLSafeSerializer(app.secret_key)
-    good_sig, steam_data = auth_s.loads_unsafe(cookie_data)
-    if good_sig:
-        try:
-            steam_info = json.loads(steam_data)
-            full_keys = set(["steam_id", "screen_name", "avatar_thumb", "avatar", "expires"])
+    if not cookie_str:
+        return 0, {}
+    
+    ser = URLSafeSerializer(app.secret_key)
+    loaded, cookie_json = ser.loads_unsafe(cookie_str)
 
-            if "steam_id" not in steam_info.keys():
-                return 4, None # Good signature and loaded proper, but missing information
-            elif info_max_age == 0 or steam_info.get("expires", 0) <= datetime.now(timezone.utc).timestamp() or len(steam_info) != len(full_keys):
-                return 5, steam_info # Good signature and loaded proper, but needs to be refreshed    
-                    
-            return 0, steam_info # Cookie has a good signature and loaded proper
-        except json.JSONDecodeError:
-            return 2, None # Cookie has invalid JSON data, throw out
+    if not loaded:
+        return 1, {}
+    
+    try:
+        steam_info = json.loads(cookie_json)
+    except json.JSONDecodeError:
+        return 2, {}
+    
+    if "expires" in steam_info.keys() and steam_info["expires"] <= datetime.now(timezone.utc).timestamp():
+        return 3, steam_info
     else:
-        return 3, None # Cookie has a bad signature, throw out
+        return 0, steam_info
 
-def refresh_steam_cookie(steam_info, response):
-    if not steam_info:
+def refresh_steam_cookie(steamid: int, response):
+    if steamid <= 0:
         response.set_cookie("steam_info", "", secure=True)
         return {}
 
-    steam_id = steam_info.get("steam_id", None)
-    if not steam_id or not response:
+    info = get_steam_user_info(steam_key, [steamid], connect_timeout, read_timeout)
+
+    if info["errcode"] != 0 or not info["users"].get(steamid, {}).get("exists", False):
         response.set_cookie("steam_info", "", secure=True)
         return {}
     
-    info = get_steam_user_info(steam_key, steam_id)
-
-    if info and info["exists"]:
-        auth_s = URLSafeSerializer(app.secret_key)
-        response.set_cookie(
-            "steam_info",
-            auth_s.dumps(json.dumps(info if info_max_age > 0 else {"steam_id": info["steamid"]}, indent=None)),
-            max_age=cookie_max_age,
-            secure=True,
-            httponly=True,
-            samesite="Lax",
-        )
-        return info
-    else:
-        response.set_cookie("steam_info", "", secure=True)
-        return {}
+    info = info["users"][steamid]
+    if info_max_age:
+        info["expires"] = (datetime.now(timezone.utc) + timedelta(seconds=info_max_age)).timestamp()
+    ser = URLSafeSerializer(app.secret_key)
+    response.set_cookie(
+        "steam_info",
+        ser.dumps(json.dumps(info)),
+        secure=True,
+        httponly=True,
+        max_age=cookie_max_age
+    )
+    return info
 
 @app.route('/')
 def index():
-    errcode, steam_info = fetch_steam_info(request.cookies.get("steam_info", None))
-
+    errcode, steam_info = fetch_steam_cookie(request)
     response = Response()
-    if errcode not in (0,1):
-        steam_info = refresh_steam_cookie(steam_info, response)
-    response.data = render_template("home.html", steam_info=steam_info, **basic_info_dict())
+
+    if errcode == 3:
+        steam_info = refresh_steam_cookie(steam_info.get("steam_id", -1), response)
+    elif errcode != 0:
+        response.set_cookie("steam_info", "", secure=True)
     
+    response.data = render_template("home.html", steam_info=steam_info, **basic_info_dict())
     return response
 
 @app.route("/privacy")
@@ -125,14 +137,13 @@ def privacy():
     return render_template("privacy.html", privacy_email=privacy_email, **basic_info_dict())
 
 @app.route("/steam_login", methods=["GET", "POST"])
-def login_disabled():
-    return (
-        'Steam login is currently disabled<br/><a href="/">Click here to go back home</a>',
-        403
-    )
-
-#@app.route("/steam_login", methods=["GET", "POST"])
 def steam_login():
+    if not app.debug:
+        return (
+            'Steam login is currently disabled<br/><a href="/">Click here to go back home</a>',
+            403
+        )
+    
     if request.method == "POST":
         steam_openid_url = 'https://steamcommunity.com/openid/login'
         return_url = url_for("steam_login", _external=True)
@@ -151,8 +162,8 @@ def steam_login():
     response = redirect(url_for("index"))
 
     if validate_steam_identity(dict(request.args)):
-        steam_id = request.args["openid.identity"].rsplit("/")[-1]
-        refresh_steam_cookie({"steam_id": steam_id}, response)
+        steam_id = int(request.args["openid.identity"].rsplit("/")[-1])
+        refresh_steam_cookie(steam_id, response)
     
     return response
 
@@ -172,7 +183,42 @@ def validate_steam_identity(params):
         return False
     except:
         return False
+
+# API stuff
+@app.route("/api/v1/get_friend_list", methods=["GET", "POST"] if app.debug else ["POST"])
+def get_friend_list():
+    if request.method == "GET":
+        return render_template(
+            "api_test.html",
+            api_function_name="get_friend_list",
+            api_version="v1",
+            api_function_params=[]
+        )
+    errcode, steam_info = fetch_steam_cookie(request)
+    if "steam_id" not in steam_info.keys():
+        return ("Not signed in to Steam. errcode {}".format(errcode), 403)
     
+    friends_info = get_steam_user_friend_list(
+        steam_key,
+        steam_info["steam_id"],
+        connect_timeout,
+        read_timeout
+    )
+
+    errcode = friends_info.pop("errcode")
+
+    if errcode == 1:
+        return ("Site has bad Steam API key. Please contact us about this error at " + contact_email, 500)
+    elif errcode == 2:
+        return ("Steam took too long to respond", 500)
+    elif errcode == 3:
+        return ("Steam took too long to transmit info", 500)
+    elif errcode == 4:
+        return ("Your Friend List is not publicly accessible, and cannot be retrieved by WhatCanWePlay", 500)
+    elif errcode == -1:
+        return ("An unknown error occurred", 500)
+    
+    return jsonify(friends_info["friends"])
 
 if __name__ == "__main__":
     app.run()
