@@ -90,7 +90,7 @@ def fetch_steam_cookie(request):
     except json.JSONDecodeError:
         return 2, {}
     
-    if "expires" in steam_info.keys() and steam_info["expires"] <= datetime.now(timezone.utc).timestamp():
+    if "expires" not in steam_info.keys() or steam_info["expires"] <= datetime.now(timezone.utc).timestamp():
         return 3, steam_info
     else:
         return 0, steam_info
@@ -123,6 +123,8 @@ def refresh_steam_cookie(steamid: int, response):
 def index():
     errcode, steam_info = fetch_steam_cookie(request)
     response = Response()
+
+    print("errcode {}".format(errcode))
 
     if errcode == 3:
         steam_info = refresh_steam_cookie(steam_info.get("steam_id", -1), response)
