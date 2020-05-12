@@ -39,11 +39,11 @@
 {% block content %}
 <div id="app">
     <div id="users">
-        <div id="main-user" data-steam-id="{{ steam_info.steam_id }}" class="user">
+        <div id="main-user" class="user" data-visibility="{{ steam_info.visibility }}">
             <img class="user-img" src="{{ steam_info.avatar }}"/>
             <span class="user-name">{{ steam_info.screen_name }}</span>
-            <button class="user-checkbox">
-                <div class="user-checkbox-fill"></div>
+            <button class="user-checkbox" data-steam-id="{{ steam_info.steam_id }}", onclick="userCheckboxClicked(this)">
+                <div class="user-checkbox-fill" style="display:none;"></div>
             </button>
         </div>
         <input type="text" id="user-search" placeholder="Search by name" />

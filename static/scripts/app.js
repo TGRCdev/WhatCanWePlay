@@ -2,24 +2,51 @@ var friends;
 var user_template;
 var search_box;
 
+var selected_users = new Set()
+
 window.addEventListener("load", function() {
     friends = document.getElementById("friends")
     default_avatar_url = friends.dataset.defaultAvatar;
-    user_template = document.getElementById("main-user").cloneNode(true)
+    main_user = document.getElementById("main-user")
+    user_template = main_user.cloneNode(true)
     this.user_template.id = ""
 
     for(var i = 0; i < user_template.children.length; i++)
     {
         var child = user_template.children[i]
-        user_template.dataset.steamId = ""
         switch(child.className)
         {
             case "user-img":
                 child.src = default_avatar_url
+                child.loading = "lazy"
                 break;
             case "user-name":
                 child.innerHTML = ""
                 break;
+            case "user-checkbox":
+                delete child.dataset.steamId
+        }
+    }
+
+    for(var i = 0; i < main_user.children.length; i++)
+    {
+        var child = main_user.children[i];
+        if(child.className == "user-checkbox")
+        {
+            var vis = main_user.dataset.visibility;
+            if(vis != "3")
+            {
+                delete child.dataset.steamId
+                child.classList.add("inactive")
+                child.title = "Your Steam profile visibility is set to "
+                + (vis == 1 ? "Private" : "Friends Only")
+                + ", and cannot be retrieved by this app."
+                //child.onclick = null;
+            }
+            else
+            {
+                userCheckboxClicked(child)
+            }
         }
     }
 
@@ -37,9 +64,9 @@ window.addEventListener("load", function() {
     })
 })
 
-function apiTimeout()
+function apiError(error)
 {
-    console.error("Couldn't connect to the backend. Please try again later.")
+    console.error("Backend API returned an error: " + String(error))
     // TODO
 }
 
@@ -53,7 +80,7 @@ function friendsFetched(data)
                 steamids: data
             })
         }
-    ), 10000).then((response) => response.json()).then(friendDataFetched)//.catch(apiTimeout)
+    ), 10000).then((response) => response.json()).then(friendDataFetched).catch(apiError)
 }
 
 function friendDataFetched(data)
@@ -62,6 +89,18 @@ function friendDataFetched(data)
 
     data.sort(
         (a, b) => {
+            if(a["visibility"] == 3)
+            {
+                if(b["visibility"] != 3)
+                {
+                    return -1
+                }
+            }
+            else if(b["visibility"] == 3)
+            {
+                return 1;
+            }
+
             if(a["online"])
             {
                 if(!b["online"])
@@ -73,6 +112,7 @@ function friendDataFetched(data)
             {
                 return 1;
             }
+
             return a["screen_name"].localeCompare(b["screen_name"])
         }
     )
@@ -99,10 +139,47 @@ function friendDataFetched(data)
                 case "user-name":
                     child.innerHTML = user["screen_name"]
                     break;
+                case "user-checkbox":
+                    if(user["visibility"] != 3)
+                    {
+                        //child.onclick = null;
+                        child.title = "This user's Steam profile visibility is set to "
+                        + (user["visibility"] == 1 ? "Private" : "Friends Only")
+                        + ", and cannot be retrieved by this app."
+                        child.classList.add("inactive")
+                    }
+                    else
+                    {
+                        child.dataset.steamId = user["steam_id"]
+                    }
+                    break;
             }
         });
         friends.appendChild(user_div)
     });
+}
+
+function userCheckboxClicked(box)
+{
+    steamid = box.dataset.steamId
+    if(steamid)
+    {
+        fill = box.children[0]
+        if(fill.style.display == "none")
+        {
+            fill.style.display = "block"
+            selected_users.add(steamid)
+        }
+        else
+        {
+            fill.style.display = "none"
+            selected_users.delete(steamid)
+        }
+    }
+    else
+    {
+        alert(box.title)
+    }
 }
 
 function searchFriends(search_str)
