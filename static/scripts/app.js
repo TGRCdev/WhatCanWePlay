@@ -31,7 +31,8 @@ window.addEventListener("load", function() {
     search_box = document.getElementById("user-search")
     search_box.addEventListener("keyup", function(event) {
         if (event.keyCode == 13) {
-            searchFriends(search_box.value)
+            search_box.blur();
+            searchFriends(search_box.value);
         }
     })
 })
