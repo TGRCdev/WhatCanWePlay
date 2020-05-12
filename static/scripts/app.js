@@ -106,7 +106,7 @@ function friendDataFetched(data)
 
 function searchFriends(search_str)
 {
-    search_str = search_str.trim()
+    search_str = search_str.trim().toLowerCase()
 
     for(var i = 0; i < friends.children.length; i++)
     {
