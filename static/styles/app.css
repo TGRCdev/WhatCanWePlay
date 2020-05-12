@@ -44,15 +44,57 @@ html, body {
     overflow-y:auto;
 }
 
-#submit {
-    height: 65px;
+#app>#submit {
     grid-column: 2;
+    box-sizing:border-box;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    border-color: rgba(0,0,0,0);
+    display:flex;
+    justify-content: center;
 }
 
-#back {
+/*
+#submit-button {
+    min-width: 208px;
+    width: 50%;
+    height: 100%;
+    font-size: 30px;
+}*/
+
+.slide-button {
+    width: 80%;
+    height: 64px;
+    font-size: 30px;
+    margin: auto;
+    border-style: solid;
+    border-radius: 5px;
+}
+
+#submit-button {
+    color: #bcf73f;
+    border-color: #608511;
+    background-color: #608511;
+}
+
+#submit-button:hover {
+    color: #516d16;
+    border-color: #92d600;
+    background-color: #92d600;
+}
+
+#back-button {
+    background-color: #0870b5;
+    border-color: #0870b5;
+    color: #dbf1ff;
+}
+
+#app>#back {
     grid-row: 1;
     grid-column: 2;
     height: 65px;
+    display:flex;
+    justify-content: center;
 }
 
 #games {
@@ -139,6 +181,10 @@ html, body {
         padding: 10px;
     }
 
+    #app>#back {
+        display: none;
+    }
+
     #app>div {
         border-radius: 5px;
     }
@@ -154,16 +200,64 @@ html, body {
 
 /* Mobile Overrides */
 @media (max-width: 600px) {
-    #submit {
+    #app>#submit {
         grid-column: 1;
+        padding: 0;
+        border-color: #131313;
+        border-top: 0;
     }
 
-    #users {
+    .slide-button {
+        margin: 0;
+        width: 100%;
+        border-radius: 0;
+    }
+
+    #app>#users {
         grid-row-end: 3;
     }
 
     #app {
         width: 200vw;
+        position: relative;
+    }
+
+    .slide-to-games {
+        animation-name: to-games;
+        animation-duration: 0.6s;
+        animation-fill-mode: forwards;
+    }
+
+    @keyframes to-games {
+        from {
+            right: 0%;
+        }
+        to {
+            right: 100%;
+        }
+    }
+
+    .on-games {
+        right: 100%;
+    }
+
+    .slide-to-users {
+        animation-name: to-users;
+        animation-duration: 0.6s;
+        animation-fill-mode: forwards;
+    }
+
+    @keyframes to-users {
+        from {
+            right: 100%;
+        }
+        to {
+            right: 0%;
+        }
+    }
+
+    .on-users {
+        right: 0%;
     }
 }
 

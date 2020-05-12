@@ -1,30 +1,40 @@
 var friends;
 var user_template;
 var search_box;
+var submit;
+var app;
+var back;
 
 var selected_users = new Set()
 
+var current_slide_timeout;
+
 window.addEventListener("load", function() {
-    friends = document.getElementById("friends")
+    submit = document.getElementById("submit-button");
+    submit.addEventListener("click", submitButtonClicked);
+    back = document.getElementById("back-button");
+    back.addEventListener("click", backButtonClicked);
+    app = document.getElementById("app");
+    friends = document.getElementById("friends");
     default_avatar_url = friends.dataset.defaultAvatar;
-    main_user = document.getElementById("main-user")
-    user_template = main_user.cloneNode(true)
-    this.user_template.id = ""
+    main_user = document.getElementById("main-user");
+    user_template = main_user.cloneNode(true);
+    this.user_template.id = "";
 
     for(var i = 0; i < user_template.children.length; i++)
     {
-        var child = user_template.children[i]
+        var child = user_template.children[i];
         switch(child.className)
         {
             case "user-img":
-                child.src = default_avatar_url
-                child.loading = "lazy"
+                child.src = default_avatar_url;
                 break;
             case "user-name":
-                child.innerHTML = ""
+                child.innerHTML = "";
                 break;
             case "user-checkbox":
-                delete child.dataset.steamId
+                delete child.dataset.steamId;
+                break;
         }
     }
 
@@ -36,16 +46,15 @@ window.addEventListener("load", function() {
             var vis = main_user.dataset.visibility;
             if(vis != "3")
             {
-                delete child.dataset.steamId
-                child.classList.add("inactive")
+                delete child.dataset.steamId;
+                child.classList.add("inactive");
                 child.title = "Your Steam profile visibility is set to "
                 + (vis == 1 ? "Private" : "Friends Only")
-                + ", and cannot be retrieved by this app."
-                //child.onclick = null;
+                + ", and cannot be retrieved by this app.";
             }
             else
             {
-                userCheckboxClicked(child)
+                userCheckboxClicked(child);
             }
         }
     }
@@ -55,18 +64,53 @@ window.addEventListener("load", function() {
         "/api/v1/get_friend_list", {method: "post"}
     ), 10000).then((response) => response.json()).then(friendsFetched)//.catch(apiTimeout)
 
-    search_box = document.getElementById("user-search")
+    search_box = document.getElementById("user-search");
     search_box.addEventListener("keyup", function(event) {
         if (event.keyCode == 13) {
             search_box.blur();
             searchFriends(search_box.value);
         }
-    })
+    });
 })
+
+function submitButtonClicked()
+{
+    if(app.className.includes("on-users") || app.className.includes("slide-to-users"))
+    {
+        app.classList.remove("on-users");
+        app.classList.remove("slide-to-users");
+        app.classList.add("slide-to-games");
+        clearTimeout(current_slide_timeout);
+        current_slide_timeout = setTimeout(
+            function() {
+                app.classList.remove("slide-to-games")
+                app.classList.add("on-games")
+            },
+        600);
+    }
+    // TODO: Fetch intersected games
+}
+
+function backButtonClicked()
+{
+    if(app.className.includes("on-games") || app.className.includes("slide-to-games"))
+    {
+        app.classList.remove("on-games");
+        app.classList.remove("slide-to-games");
+        app.classList.add("slide-to-users");
+        clearTimeout(current_slide_timeout);
+        current_slide_timeout = setTimeout(
+            function() {
+                app.classList.remove("slide-to-users")
+                app.classList.add("on-users")
+            },
+        600);
+    }
+}
 
 function apiError(error)
 {
-    console.error("Backend API returned an error: " + String(error))
+    console.error("Backend API returned an error: " + String(error));
     // TODO
 }
 
@@ -80,12 +124,12 @@ function friendsFetched(data)
                 steamids: data
             })
         }
-    ), 10000).then((response) => response.json()).then(friendDataFetched).catch(apiError)
+    ), 10000).then((response) => response.json()).then(friendDataFetched).catch(apiError);
 }
 
 function friendDataFetched(data)
 {
-    data = Object.values(data)
+    data = Object.values(data);
 
     data.sort(
         (a, b) => {
@@ -113,9 +157,9 @@ function friendDataFetched(data)
                 return 1;
             }
 
-            return a["screen_name"].localeCompare(b["screen_name"])
+            return a["screen_name"].localeCompare(b["screen_name"]);
         }
-    )
+    );
 
     data.forEach(function(user) {
         if(!user["exists"])
@@ -123,21 +167,21 @@ function friendDataFetched(data)
             return;
         }
 
-        var user_div = user_template.cloneNode(true)
-        user_div.dataset.steamId = user["steam_id"]
-        user_div.dataset.name = user["screen_name"]
+        var user_div = user_template.cloneNode(true);
+        user_div.dataset.steamId = user["steam_id"];
+        user_div.dataset.name = user["screen_name"];
         Array.from(user_div.children).forEach(function(child) {
             switch(child.className)
             {
                 case "user-img":
-                    child.src = user["avatar"]
+                    child.src = user["avatar"];
                     if(!user["online"])
                     {
-                        child.classList.add("offline")
+                        child.classList.add("offline");
                     }
                     break;
                 case "user-name":
-                    child.innerHTML = user["screen_name"]
+                    child.innerHTML = user["screen_name"];
                     break;
                 case "user-checkbox":
                     if(user["visibility"] != 3)
@@ -145,17 +189,17 @@ function friendDataFetched(data)
                         //child.onclick = null;
                         child.title = "This user's Steam profile visibility is set to "
                         + (user["visibility"] == 1 ? "Private" : "Friends Only")
-                        + ", and cannot be retrieved by this app."
-                        child.classList.add("inactive")
+                        + ", and cannot be retrieved by this app.";
+                        child.classList.add("inactive");
                     }
                     else
                     {
-                        child.dataset.steamId = user["steam_id"]
+                        child.dataset.steamId = user["steam_id"];
                     }
                     break;
             }
         });
-        friends.appendChild(user_div)
+        friends.appendChild(user_div);
     });
 }
 

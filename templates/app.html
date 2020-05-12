@@ -37,7 +37,7 @@
 {% endblock %}
 
 {% block content %}
-<div id="app">
+<div id="app" class="on-users">
     <div id="users">
         <div id="main-user" class="user" data-visibility="{{ steam_info.visibility }}">
             <img class="user-img" src="{{ steam_info.avatar }}"/>
@@ -51,10 +51,10 @@
         </div>
     </div>
     <div id="submit">
-        Find Games Button
+        <button class="slide-button" id="submit-button">Find Games</button>
     </div>
     <div id="back">
-        Back Button
+        <button class="slide-button" id="back-button">Go Back</button>
     </div>
     <div id="games">
         Games List
