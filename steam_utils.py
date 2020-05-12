@@ -84,6 +84,7 @@ def get_steam_user_info(webkey: str, steamids: Collection[int], connect_timeout:
                 user_info["avatar_thumb"] = user["avatar"]
                 user_info["avatar"] = user["avatarmedium"]
                 user_info["visibility"] = user["communityvisibilitystate"]
+                user_info["online"] = user.get("personastate", 0) != 0
                 user_dict[steam_id] = user_info
     
     return_dict["users"] = user_dict

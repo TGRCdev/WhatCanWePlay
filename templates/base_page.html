@@ -19,8 +19,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 <html>
     <head>
         {% block head %}
+        {% block meta %}
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        
+        {% endblock %}
+
         <title>
             {% block title %}{% endblock %}
             {% block title_postfix %}

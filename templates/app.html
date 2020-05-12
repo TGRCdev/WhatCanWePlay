@@ -21,23 +21,33 @@
 {% block title %}What Can We Play?{% endblock %}
 {% block title_postfix %}{% endblock %}
 
+{% block meta %}
+{{ super() }}
+{% endblock %}
+
 {% block styles %}
 {{ super() }}
 <link rel="stylesheet" href="{{ url_for('static', filename='styles/app.css') }}"/>
 {% endblock %}
 
+{% block scripts %}
+{{ super() }}
+<script src="{{ url_for('static', filename='scripts/fetch_timeout.js') }}"></script>
+<script src="{{ url_for('static', filename='scripts/app.js') }}"></script>
+{% endblock %}
+
 {% block content %}
 <div id="app">
     <div id="users">
-        <div id="main-user" class="user">
+        <div id="main-user" data-steam-id="{{ steam_info.steam_id }}" class="user">
             <img class="user-img" src="{{ steam_info.avatar }}"/>
             <span class="user-name">{{ steam_info.screen_name }}</span>
             <button class="user-checkbox">
                 <div class="user-checkbox-fill"></div>
             </button>
         </div>
-        <input type="text" id="user-search" placeholder="Search by name"></input>
-        <div id="friends">
+        <input type="text" id="user-search" placeholder="Search by name" />
+        <div id="friends" data-default-avatar="{{ url_for('static', filename='images/default_avatar.png') }}">
         </div>
     </div>
     <div id="submit">

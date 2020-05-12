@@ -124,12 +124,11 @@ def index():
     errcode, steam_info = fetch_steam_cookie(request)
     response = Response()
 
-    print("errcode {}".format(errcode))
-
     if errcode == 3:
         steam_info = refresh_steam_cookie(steam_info.get("steam_id", -1), response)
     elif errcode != 0:
         response.set_cookie("steam_info", "", secure=True)
+        steam_info = {}
     
     response.data = render_template("home.html", steam_info=steam_info, **basic_info_dict())
     return response
