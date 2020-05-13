@@ -289,6 +289,7 @@ def intersect_owned_games_v1():
             api_version="v1",
             api_function_params=json.dumps(params)
         )
+    print("intersect_owned_games received POST request")
     
     errcode, steam_info = fetch_steam_cookie(request)
     if "steam_id" not in steam_info.keys():
@@ -319,12 +320,14 @@ def intersect_owned_games_v1():
         )
     
     free_games = bool(body.get("include_free_games", False))
-    
-    # Step one: Get the sets of owned games (Check for users with no games or non-visible games lists)
-    user_game_sets = {}
+
+    all_own = None
+
+    print("request valid. retrieving users games")
 
     for steamid in steamids:
         user_owned_games = get_owned_steam_games(steam_key, steamid, free_games, connect_timeout, read_timeout)
+        print("retrieved a user's games")
         errcode = user_owned_games["errcode"]
 
         if errcode == 1:
@@ -360,22 +363,20 @@ def intersect_owned_games_v1():
                 400
             )
         
-        user_game_sets[steamid] = set(games)
-
-    # Step two: Intersect all sets
-    all_own = None
-
-    for games_set in user_game_sets.values():
         if not all_own:
-            all_own = games_set
+            all_own = set(games)
+            print("set initialized. length: " + str(len(all_own)))
         else:
-            all_own = all_own & games_set
+            all_own = all_own & set(games)
+            print("set intersected. length: " + str(len(all_own)))
         
         if len(all_own) == 0:
             break
     
-    # Step three: Return the remaining games
+    # Step two: Fetch the game info
     # TODO: IGDB info
+
+    print("returning intersected set")
 
     return jsonify({
         "message": "Intersected successfully",

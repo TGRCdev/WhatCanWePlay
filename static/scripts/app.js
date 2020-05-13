@@ -84,6 +84,8 @@ function submitButtonClicked()
     fetching = true;
     submit.disabled = true;
     submit.innerHTML = "Fetching..."
+    back.disabled = true;
+    back.innerHTML = "Fetching..."
 
     if(app.className.includes("on-users") || app.className.includes("slide-to-users"))
     {
@@ -114,7 +116,9 @@ function submitButtonClicked()
         games.innerHTML = JSON.stringify(data)
     }).catch(apiError).finally(function() {
         submit.disabled = false;
-        submit.innerHTML = "Find Games"
+        submit.innerHTML = "Find Games";
+        back.disabled = false;
+        back.innerHTML = "Back";
         fetching = false;
     })
 }

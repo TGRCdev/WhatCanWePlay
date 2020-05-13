@@ -106,6 +106,17 @@ html, body {
     color: #dbf1ff;
 }
 
+#back-button:hover {
+    background-color: #33adff;
+    border-color: #33adff;
+}
+
+#back-button:disabled {
+    background-color: #455d6c;
+    border-color: #455d6c;
+    color: #adb9c1;
+}
+
 #app>#back {
     grid-row: 1;
     grid-column: 2;
