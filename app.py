@@ -293,14 +293,14 @@ def intersect_owned_games_v1():
     errcode, steam_info = fetch_steam_cookie(request)
     if "steam_id" not in steam_info.keys():
         return (
-            json.dumps({"message": "Not signed in to Steam"}),
+            json.dumps({"message": "Not signed in to Steam", "errcode": -1}),
             403
         )
     
-    body = request.get_json(force=True, silent=True) or {}
-    if "steamids" not in body.keys():
+    body = request.get_json(force=True, silent=True)
+    if not body or "steamids" not in body.keys():
         return (
-            json.dumps({"message": "Missing required field \"steamids\""}),
+            json.dumps({"message": "Missing required field \"steamids\"", "errcode": -1}),
             400
         )
     
@@ -308,13 +308,13 @@ def intersect_owned_games_v1():
         steamids = set([int(id) for id in body["steamids"]])
     except (ValueError, TypeError):
         return (
-            json.dumps({"message": "steamids must be an array of integers or an array of strings parseable to an integer"}),
+            json.dumps({"message": "steamids must be an array of integers or an array of strings parseable to an integer", "errcode": -1}),
             400
         )
     
     if len(steamids) < 2:
         return (
-            json.dumps({"message": "Must have at least 2 users to intersect games"}),
+            json.dumps({"message": "Must have at least 2 users to intersect games", "errcode": -1}),
             400
         )
     
@@ -379,7 +379,8 @@ def intersect_owned_games_v1():
 
     return jsonify({
         "message": "Intersected successfully",
-        "games": list(games_set)
+        "games": list(all_own),
+        "errcode": 0
     })
 
 if __name__ == "__main__":

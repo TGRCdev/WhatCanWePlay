@@ -42,7 +42,7 @@
         <div id="main-user" class="user" data-visibility="{{ steam_info.visibility }}">
             <img class="user-img" src="{{ steam_info.avatar }}"/>
             <span class="user-name">{{ steam_info.screen_name }}</span>
-            <button class="user-checkbox" data-steam-id="{{ steam_info.steam_id }}", onclick="userCheckboxClicked(this)">
+            <button class="user-checkbox" data-steam-id="{{ steam_info.steam_id }}" onclick="userCheckboxClicked(this)">
                 <div class="user-checkbox-fill" style="display:none;"></div>
             </button>
         </div>
@@ -51,7 +51,7 @@
         </div>
     </div>
     <div id="submit">
-        <button class="slide-button" id="submit-button">Find Games</button>
+        <button class="slide-button" id="submit-button" disabled>Select Two Users</button>
     </div>
     <div id="back">
         <button class="slide-button" id="back-button">Go Back</button>

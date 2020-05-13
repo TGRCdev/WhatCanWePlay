@@ -4,6 +4,9 @@ var search_box;
 var submit;
 var app;
 var back;
+var games;
+
+var user_info = {}
 
 var selected_users = new Set()
 
@@ -16,6 +19,7 @@ window.addEventListener("load", function() {
     back.addEventListener("click", backButtonClicked);
     app = document.getElementById("app");
     friends = document.getElementById("friends");
+    games = document.getElementById("games")
     default_avatar_url = friends.dataset.defaultAvatar;
     main_user = document.getElementById("main-user");
     user_template = main_user.cloneNode(true);
@@ -88,7 +92,27 @@ function submitButtonClicked()
             },
         600);
     }
-    // TODO: Fetch intersected games
+    
+    submit.disabled = true;
+    submit.innerHTML = "Fetching..."
+
+    body = {
+        steamids: Array.from(selected_users)
+    }
+
+    games_fetch = timeout(fetch(
+        "/api/v1/intersect_owned_games", {
+            method: "post",
+            body: JSON.stringify(body)
+        }
+    ), 30000)
+
+    games_fetch.then((response) => response.json()).then(function(data) {
+        games.innerHTML = JSON.stringify(data)
+    }).catch(apiError)
+
+    submit.disabled = false;
+    submit.innerHTML = "Find Games"
 }
 
 function backButtonClicked()
@@ -170,6 +194,7 @@ function friendDataFetched(data)
         var user_div = user_template.cloneNode(true);
         user_div.dataset.steamId = user["steam_id"];
         user_div.dataset.name = user["screen_name"];
+        user["div"] = user_div;
         Array.from(user_div.children).forEach(function(child) {
             switch(child.className)
             {
@@ -200,6 +225,7 @@ function friendDataFetched(data)
             }
         });
         friends.appendChild(user_div);
+        user_info[user["steam_id"]] = user;
     });
 }
 
@@ -209,15 +235,27 @@ function userCheckboxClicked(box)
     if(steamid)
     {
         fill = box.children[0]
-        if(fill.style.display == "none")
+        if(selected_users.has(steamid))
+        {
+            fill.style.display = "none"
+            selected_users.delete(steamid)
+        }
+        else
         {
             fill.style.display = "block"
             selected_users.add(steamid)
         }
+
+        len = selected_users.size;
+        if(len >= 2)
+        {
+            submit.disabled = false;
+            submit.innerHTML = "Find Games"
+        }
         else
         {
-            fill.style.display = "none"
-            selected_users.delete(steamid)
+            submit.disabled = true;
+            submit.innerHTML = "Select " + (len == 0 ? "Two Users" : "One User")
         }
     }
     else
@@ -234,20 +272,13 @@ function searchFriends(search_str)
     {
         var user = friends.children[i]
         var name = user.dataset.name;
-        if(!search_str || search_str.length == 0)
+        if(!search_str || search_str.length == 0 || name.toLowerCase().includes(search_str))
         {
             user.style.display = "flex"
         }
         else
         {
-            if(name.toLowerCase().includes(search_str))
-            {
-                user.style.display = "flex"
-            }
-            else
-            {
-                user.style.display = "none"
-            }
+            user.style.display = "none"
         }
     }
 }

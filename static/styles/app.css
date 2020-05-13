@@ -1,3 +1,21 @@
+/*
+    This file is a part of WhatCanWePlay
+    Copyright (C) 2020 TGRCDev
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 html, body {
     max-height:100vh;
     height:100vh;
@@ -27,7 +45,7 @@ html, body {
     display: grid;
     grid-template-rows: min-content 1fr min-content;
     box-sizing:border-box;
-    grid-template-columns: 50% auto;
+    grid-template-columns: auto 50%;
     max-height:100%;
 }
 
@@ -54,14 +72,6 @@ html, body {
     justify-content: center;
 }
 
-/*
-#submit-button {
-    min-width: 208px;
-    width: 50%;
-    height: 100%;
-    font-size: 30px;
-}*/
-
 .slide-button {
     width: 80%;
     height: 64px;
@@ -83,6 +93,13 @@ html, body {
     background-color: #92d600;
 }
 
+#submit-button:disabled {
+    color: #a4b77d;
+    border-color: #485331;
+    background-color: #485331;
+    font-size: 26px;
+}
+
 #back-button {
     background-color: #0870b5;
     border-color: #0870b5;
@@ -101,6 +118,7 @@ html, body {
     grid-row-start: 2;
     grid-row-end: 4;
     grid-column: 2;
+    word-wrap:anywhere;
 }
 
 #main-user {
@@ -260,27 +278,3 @@ html, body {
         right: 0%;
     }
 }
-
-
-/* Debug only */
-/*
-#users {
-    background-color: darkgoldenrod;
-    text-shadow: 0px 0px 2px #000000;
-}
-
-#submit {
-    background-color: green;
-    text-shadow: 0px 0px 2px #000000;
-}
-
-#back {
-    background-color: cyan;
-    text-shadow: 0px 0px 2px #000000;
-}
-
-#games {
-    background-color: purple;
-    text-shadow: 0px 0px 2px #000000;
-}
-*/
