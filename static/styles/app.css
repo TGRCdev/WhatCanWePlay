@@ -56,6 +56,14 @@ html, body {
     max-height:100%;
     display:flex;
     flex-direction:column;
+    position:relative;
+}
+
+#users-cover {
+    position:absolute;
+    width:100%;
+    height:100%;
+    z-index:1;
 }
 
 #friends {
@@ -224,6 +232,11 @@ html, body {
 
     #back {
         display: none;
+    }
+
+    #users-cover {
+        background-color: #646464;
+        opacity: 0.5;
     }
 }
 

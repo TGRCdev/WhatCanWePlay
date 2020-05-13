@@ -5,6 +5,7 @@ var submit;
 var app;
 var back;
 var games;
+var users_cover;
 
 var user_info = {}
 
@@ -21,7 +22,8 @@ window.addEventListener("load", function() {
     back.addEventListener("click", backButtonClicked);
     app = document.getElementById("app");
     friends = document.getElementById("friends");
-    games = document.getElementById("games")
+    games = document.getElementById("games");
+    users_cover = document.getElementById("users-cover");
     default_avatar_url = friends.dataset.defaultAvatar;
     main_user = document.getElementById("main-user");
     user_template = main_user.cloneNode(true);
@@ -86,6 +88,7 @@ function submitButtonClicked()
     submit.innerHTML = "Fetching..."
     back.disabled = true;
     back.innerHTML = "Fetching..."
+    users_cover.style.display = "block";
 
     if(app.className.includes("on-users") || app.className.includes("slide-to-users"))
     {
@@ -120,6 +123,7 @@ function submitButtonClicked()
         back.disabled = false;
         back.innerHTML = "Back";
         fetching = false;
+        users_cover.style.display = "none"
     })
 }
 
