@@ -12,6 +12,8 @@ var selected_users = new Set()
 
 var current_slide_timeout;
 
+var fetching = false;
+
 window.addEventListener("load", function() {
     submit = document.getElementById("submit-button");
     submit.addEventListener("click", submitButtonClicked);
@@ -79,6 +81,10 @@ window.addEventListener("load", function() {
 
 function submitButtonClicked()
 {
+    fetching = true;
+    submit.disabled = true;
+    submit.innerHTML = "Fetching..."
+
     if(app.className.includes("on-users") || app.className.includes("slide-to-users"))
     {
         app.classList.remove("on-users");
@@ -92,9 +98,6 @@ function submitButtonClicked()
             },
         600);
     }
-    
-    submit.disabled = true;
-    submit.innerHTML = "Fetching..."
 
     body = {
         steamids: Array.from(selected_users)
@@ -109,10 +112,11 @@ function submitButtonClicked()
 
     games_fetch.then((response) => response.json()).then(function(data) {
         games.innerHTML = JSON.stringify(data)
-    }).catch(apiError)
-
-    submit.disabled = false;
-    submit.innerHTML = "Find Games"
+    }).catch(apiError).finally(function() {
+        submit.disabled = false;
+        submit.innerHTML = "Find Games"
+        fetching = false;
+    })
 }
 
 function backButtonClicked()
@@ -234,28 +238,35 @@ function userCheckboxClicked(box)
     steamid = box.dataset.steamId
     if(steamid)
     {
-        fill = box.children[0]
-        if(selected_users.has(steamid))
+        if(!fetching)
         {
-            fill.style.display = "none"
-            selected_users.delete(steamid)
-        }
-        else
-        {
-            fill.style.display = "block"
-            selected_users.add(steamid)
-        }
+            fill = box.children[0]
+            if(selected_users.has(steamid))
+            {
+                fill.style.display = "none"
+                selected_users.delete(steamid)
+            }
+            else
+            {
+                fill.style.display = "block"
+                selected_users.add(steamid)
+            }
 
-        len = selected_users.size;
-        if(len >= 2)
-        {
-            submit.disabled = false;
-            submit.innerHTML = "Find Games"
+            len = selected_users.size;
+            if(len >= 2)
+            {
+                submit.disabled = false;
+                submit.innerHTML = "Find Games"
+            }
+            else
+            {
+                submit.disabled = true;
+                submit.innerHTML = "Select " + (len == 0 ? "Two Users" : "One User")
+            }
         }
         else
         {
-            submit.disabled = true;
-            submit.innerHTML = "Select " + (len == 0 ? "Two Users" : "One User")
+            alert("Cannot modify selected users while fetching")
         }
     }
     else
