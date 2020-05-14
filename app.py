@@ -241,7 +241,10 @@ def get_steam_user_info_v1():
     if "steam_id" not in steam_info.keys():
         return ("Not signed in to Steam", 403)
     
-    body = request.get_json(force=True, silent=True) or {}
+    body = request.get_json(force=True, silent=True)
+
+    if not isinstance(body, dict):
+        return ("Was expecting JSON dictionary")
 
     if "steamids" not in body.keys():
         return ("Missing required field \"steamids\"", 400)
@@ -299,6 +302,13 @@ def intersect_owned_games_v1():
         )
     
     body = request.get_json(force=True, silent=True)
+
+    if not isinstance(body, dict):
+        return (
+            json.dumps({"message": "Was expecting JSON dictionary", "errcode": -1}),
+            400
+        )
+
     if not body or "steamids" not in body.keys():
         return (
             json.dumps({"message": "Missing required field \"steamids\"", "errcode": -1}),
