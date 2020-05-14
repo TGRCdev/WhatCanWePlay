@@ -70,7 +70,7 @@ window.addEventListener("load", function() {
     // Fetch friends list
     timeout(fetch(
         "/api/v1/get_friend_list", {method: "post"}
-    ), 10000).then((response) => response.json()).then(friendsFetched)//.catch(apiTimeout)
+    ), 10000).then((response) => response.json()).then(friendDataFetched)//.catch(apiTimeout)
 
     search_box = document.getElementById("user-search");
     search_box.addEventListener("keyup", function(event) {
@@ -148,19 +148,6 @@ function apiError(error)
 {
     console.error("Backend API returned an error: " + String(error));
     // TODO
-}
-
-function friendsFetched(data)
-{
-    timeout(fetch(
-        "/api/v1/get_steam_user_info",
-        {
-            method: "post",
-            body: JSON.stringify({
-                steamids: data
-            })
-        }
-    ), 10000).then((response) => response.json()).then(friendDataFetched).catch(apiError);
 }
 
 function friendDataFetched(data)

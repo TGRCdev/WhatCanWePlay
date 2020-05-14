@@ -223,45 +223,9 @@ def get_friend_list_v1():
     elif errcode == -1:
         return ("An unknown error occurred", 500)
     
-    return jsonify([str(id) for id in friends_info["friends"]])
+    friends_info = get_steam_user_info(steam_key, friends_info["friends"], connect_timeout, read_timeout)
 
-@app.route("/api/v1/get_steam_user_info", methods=["GET", "POST"] if enable_api_tests else ["POST"])
-def get_steam_user_info_v1():
-    if request.method == "GET":
-        params = [
-            {"name": "steamids", "type":"csl:string"}
-        ]
-        return render_template(
-            "api_test.html",
-            api_function_name="get_steam_user_info",
-            api_version="v1",
-            api_function_params=json.dumps(params),
-            **basic_info_dict()
-        )
-    
-    errcode, steam_info = fetch_steam_cookie(request)
-    if "steam_id" not in steam_info.keys():
-        return ("Not signed in to Steam", 403)
-    
-    body = request.get_json(force=True, silent=True)
-
-    if not isinstance(body, dict):
-        return ("Was expecting JSON dictionary")
-
-    if "steamids" not in body.keys():
-        return ("Missing required field \"steamids\"", 400)
-    
-    try:
-        steamids = body["steamids"]
-        if len(steamids) == 0:
-            return ("steamids is empty", 400)
-        steamids = list(map(int, steamids))
-    except (ValueError, TypeError):
-            return ("steamids must be an array of integers or an array of strings parseable to an integer", 400)
-    
-    friend_info = get_steam_user_info(steam_key, steamids, connect_timeout, read_timeout)
-
-    errcode = friend_info.pop("errcode")
+    errcode = friends_info.pop("errcode")
     if errcode == 1:
         return ("Site has bad Steam API key. Please contact us about this error at " + contact_email, 500)
     elif errcode == 2:
@@ -271,11 +235,11 @@ def get_steam_user_info_v1():
     elif errcode == -1:
         return ("An unknown error occurred", 500)
     
-    for user in friend_info["users"].values():
+    for user in friends_info["users"].values():
         if "steam_id" in user.keys():
             user["steam_id"] = str(user["steam_id"])
 
-    return jsonify(friend_info["users"])
+    return jsonify(friends_info["users"])
 
 # Errcodes
 # -1: Error without additional fields, display message
