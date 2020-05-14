@@ -1,49 +1,62 @@
-<!DOCTYPE html>
-<!--
-This file is a part of WhatCanWePlay
-Copyright (C) 2020 TGRCDev
+{#
+    This file is a part of WhatCanWePlay
+    Copyright (C) 2020 TGRCDev
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU Affero General Public License as published
-by the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU Affero General Public License for more details.
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
 
-You should have received a copy of the GNU Affero General Public License
-along with this program.  If not, see <https://www.gnu.org/licenses/>.
--->
-<html>
-    <head>
-        <title>{{ api_function_name }} {{ api_version }}</title>
-        <script src="{{ url_for('static', filename='scripts/fetch_timeout.js') }}"></script>
-        <script src="{{ url_for('static', filename='scripts/api_test.js') }}"></script>
-        <style>
-            html {
-                color: whitesmoke;
-                background-color: #262626;
-                height: 100%;
-                font-family: "Trebuchet MS", Helvetica, sans-serif;
-            }
-            table td, th {
-                background-color: #131313;
-                padding: 7px;
-            }
-        </style>
-    </head>
-    <body id="function-data" data-function-params="{{ api_function_params }}">
-        <h1>{{ api_function_name }} test page</h1>
-        <h2>version: {{ api_version }}</h2>
-        <table id="function-params-table">
-            <tr>
-                <th>Param Name</th>
-                <th>Param Type</th>
-                <th>Value Entry</th>
-            </tr>
-        </table>
-        <textarea rows="25" cols="60" placeholder="Response" id="response" readonly></textarea>
-    </body>
-</html>
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#}
+
+{% extends "base_page.html" %}
+
+{% block title %}{{ api_function_name }} {{ api_version }}{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    param_info = JSON.parse('{{ api_function_params|safe }}');
+</script>
+<script src="{{ url_for('static', filename='scripts/fetch_timeout.js') }}"></script>
+<script src="{{ url_for('static', filename='scripts/api_test.js') }}"></script>
+{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='styles/api_test.css') }}" />
+{% endblock %}
+
+{% block content %}
+<div id="test">
+    <h1>API Test: <span id="endpoint-name">{{ api_function_name }}</span> ({{ api_version }})</h1>
+    <div id="tabbox">
+        <div id="tabs">
+            <button id="fields-tab" class="tab selected" onclick="showTab('fields')">Fields</button>
+            <button id="raw-tab" class="tab" onclick="showTab('raw')">Raw</button>
+        </div>
+        <div id="fields" class="tab-content active">
+            <div id="field-table">
+                <div>Name</div><div>Type</div><div>Input</div>
+                <div id="no-params">< no parameters ></div>
+            </div>
+            <div id="fields-buttons">
+                <button id="submit" onclick="submitFields()">Submit POST Request</button>
+                <button id="field-to-raw" onclick="fieldsToRaw()">Edit as Raw JSON</button>
+            </div>
+        </div>
+        <div id="raw" class="tab-content">
+            <textarea id="raw-input" placeholder="JSON goes here"></textarea>
+            <button id="submit" onclick="submitRaw()">Submit POST Request</button>
+        </div>
+    </div>
+    <textarea id="response" placeholder="Response" readonly></textarea>
+</div>
+{% endblock %}

@@ -196,7 +196,8 @@ def get_friend_list_v1():
             "api_test.html",
             api_function_name="get_friend_list",
             api_version="v1",
-            api_function_params=[]
+            api_function_params=[],
+            **basic_info_dict()
         )
     errcode, steam_info = fetch_steam_cookie(request)
     if "steam_id" not in steam_info.keys():
@@ -234,7 +235,8 @@ def get_steam_user_info_v1():
             "api_test.html",
             api_function_name="get_steam_user_info",
             api_version="v1",
-            api_function_params=json.dumps(params)
+            api_function_params=json.dumps(params),
+            **basic_info_dict()
         )
     
     errcode, steam_info = fetch_steam_cookie(request)
@@ -284,13 +286,15 @@ def get_steam_user_info_v1():
 def intersect_owned_games_v1():
     if request.method == "GET":
         params = [
-            {"name": "steamids", "type":"csl:string"}
+            {"name": "steamids", "type":"csl:string"},
+            {"name": "include_free_games", "type":"bool", "default": True}
         ]
         return render_template(
             "api_test.html",
-            api_function_name="get_steam_user_info",
+            api_function_name="intersect_owned_games",
             api_version="v1",
-            api_function_params=json.dumps(params)
+            api_function_params=json.dumps(params),
+            **basic_info_dict()
         )
     print("intersect_owned_games received POST request")
     
