@@ -20,7 +20,7 @@ from urllib import parse
 from werkzeug.exceptions import BadRequest
 import json
 from steam_utils import get_steam_user_info, get_steam_user_friend_list, get_owned_steam_games
-#from igdb_utils import get_game_info, get_api_status
+from igdb_utils import get_steam_game_info
 from requests import HTTPError
 import secrets
 from datetime import timezone, datetime, timedelta
@@ -357,6 +357,52 @@ def intersect_owned_games_v1():
         "games": list(all_own),
         "errcode": 0
     })
+
+@app.route("/api/v1/get_steam_game_info", methods=["POST"] if not app.debug else ["POST", "GET"])
+def get_steam_game_info_v1():
+    if request.method == "GET":
+        params = [
+            {"name": "appids", "type": "csl:int"}
+        ]
+        return render_template(
+            "api_test.html",
+            api_function_name="get_steam_game_info",
+            api_version="v1",
+            api_function_params=json.dumps(params),
+            steam_info=fetch_steam_cookie(request)[1],
+            **basic_info_dict()
+        )
+    
+    errcode, steam_info = fetch_steam_cookie(request)
+    if "steam_id" not in steam_info.keys():
+        return (
+            json.dumps({"message": "Not signed in to Steam", "errcode": -1}),
+            403
+        )
+    
+    body = request.get_json(force=True, silent=True)
+
+    if not isinstance(body, dict):
+        return (
+            json.dumps({"message": "Was expecting JSON dictionary", "errcode": -1}),
+            400
+        )
+
+    if not body or "appids" not in body.keys():
+        return (
+            json.dumps({"message": "Missing required field \"appids\"", "errcode": -1}),
+            400
+        )
+    
+    try:
+        appids = set([int(id) for id in body["appids"]])
+    except (ValueError, TypeError):
+        return (
+            json.dumps({"message": "appids must be an array of integers or an array of strings parseable to an integer", "errcode": -1}),
+            400
+        )
+    
+    return jsonify(get_steam_game_info(igdb_key, appids))
 
 if __name__ == "__main__":
     app.run()

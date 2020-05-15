@@ -16,5 +16,9 @@
     "contact-email": "contact@whatcanweplay.net",
     "privacy-email": "privacy@whatcanweplay.net",
     "connect-timeout": 8,
-    "read-timeout": 30
+    "read-timeout": 30,
+    "igdb-cache-file": "igdb-cache.sqlite",
+    "igdb-cache-info-age": {
+        "weeks": 4
+    }
 }
