@@ -32,7 +32,7 @@ info_age = timedelta(**info_age_dict).total_seconds()
 
 def get_cached_games(appids: Collection[int]) -> Dict[int, Dict[str, Any]]:
     query = """
-    SELECT steam_id, name, cover_id, has_multiplayer, supported_players
+    SELECT steam_id, igdb_id, name, cover_id, has_multiplayer, supported_players
     FROM game_info
     WHERE time_cached < ? AND steam_id in ({})
     """.format(",".join(
@@ -42,12 +42,12 @@ def get_cached_games(appids: Collection[int]) -> Dict[int, Dict[str, Any]]:
     db_handle.execute("""
     CREATE TABLE IF NOT EXISTS game_info (
         steam_id INTEGER PRIMARY KEY,
-        igdb_id INTEGER NOT NULL,
-        name TEXT NOT NULL,
-        cover_id TEXT NOT NULL,
-        has_multiplayer BOOL NOT NULL,
-        supported_players TEXT NOT NULL DEFAULT('?'),
-        time_cached REAL NOT NULL
+        igdb_id INTEGER,
+        name TEXT,
+        cover_id TEXT,
+        has_multiplayer BOOL,
+        supported_players TEXT,
+        time_cached REAL
     );
     """)
     cursor = db_handle.cursor()
@@ -57,14 +57,16 @@ def get_cached_games(appids: Collection[int]) -> Dict[int, Dict[str, Any]]:
     return {
         game[0]: {
             "steam_id": game[0],
-            "name": game[1],
-            "cover_id": game[2],
-            "has_multiplayer": game[3],
-            "supported_players": game[4]
-        } for game in results
+            "name": game[2],
+            "cover_id": game[3],
+            "has_multiplayer": game[4],
+            "supported_players": game[5]
+        } if game[1] else {}
+        for game in results
     }
 
 def update_cached_games(game_info: Mapping[int, Mapping[str, Any]]):
+    print("updating " + str(game_info))
     query = """
     INSERT OR REPLACE INTO game_info
     (steam_id, igdb_id, name, cover_id, has_multiplayer, supported_players, time_cached)
@@ -74,23 +76,23 @@ def update_cached_games(game_info: Mapping[int, Mapping[str, Any]]):
     db_handle.execute("""
     CREATE TABLE IF NOT EXISTS game_info (
         steam_id INTEGER PRIMARY KEY,
-        igdb_id INTEGER NOT NULL,
-        name TEXT NOT NULL,
-        cover_id TEXT NOT NULL,
-        has_multiplayer BOOL NOT NULL,
-        supported_players TEXT NOT NULL DEFAULT('?'),
-        time_cached REAL NOT NULL
+        igdb_id INTEGER,
+        name TEXT,
+        cover_id TEXT,
+        has_multiplayer BOOL,
+        supported_players TEXT,
+        time_cached REAL
     );
     """)
     cursor = db_handle.cursor()
     cursor.execute("BEGIN TRANSACTION")
     cursor.executemany(query, [[
-        game["steam_id"],
-        game["igdb_id"],
-        game["name"],
-        game["cover_id"],
-        game["has_multiplayer"],
-        game["supported_players"],
+        game.get("steam_id"),
+        game.get("igdb_id"),
+        game.get("name"),
+        game.get("cover_id"),
+        game.get("has_multiplayer"),
+        game.get("supported_players"),
         datetime.now(timezone.utc).second] for game in game_info.values()]
     )
     cursor.execute("END TRANSACTION")
@@ -104,14 +106,16 @@ def get_steam_game_info(webkey: str, appids: Collection[int], connect_timeout: O
     cached_games = get_cached_games(appid_set)
 
     if len(cached_games) == len(appid_set):
-        return cached_games
+        print("retrieved from cache")
+        return {"errcode": 0, "games": cached_games}
 
-    uncached_ids = list(appid_set - set(cached_games.keys()))
+    uncached_ids = appid_set - set(cached_games.keys())
+    uncached_ids_list = list(uncached_ids)
 
     games_dict = {}
     retrieved_games = 0
-    while retrieved_games < len(uncached_ids):
-        game_slice = uncached_ids[retrieved_games:500]
+    while retrieved_games < len(uncached_ids_list):
+        game_slice = uncached_ids_list[retrieved_games:500]
 
         retrieved_games += len(game_slice)
 
@@ -136,32 +140,43 @@ def get_steam_game_info(webkey: str, appids: Collection[int], connect_timeout: O
             return {"errcode": -1}
         
         for game in r.json():
-            steam_id = game["uid"]
+            steam_id = int(game["uid"])
+            uncached_ids.discard(steam_id)
             game = game["game"]
-
-            maxplayers = -1
-            for mode in game.get("multiplayer_modes", []):
-                maxplayers = max(max(mode.get("onlinemax", 1), mode.get("onlinecoopmax", 1)), maxplayers)
 
             game_modes = game.get("game_modes", [])
 
             is_multiplayer = (2 in game_modes or 5 in game_modes)
 
+            maxplayers = -1
+            if is_multiplayer:
+                for mode in game.get("multiplayer_modes", []):
+                    maxplayers = max(max(mode.get("onlinemax", 1), mode.get("onlinecoopmax", 1)), maxplayers)
+            else:
+                maxplayers = 1
+
             games_dict[steam_id] = {
                 "steam_id": steam_id,
                 "igdb_id": game["id"],
                 "name": game["name"],
-                "cover_id": game["cover"]["image_id"],
+                "cover_id": game.get("cover", {}).get("image_id", ""),
                 "has_multiplayer": is_multiplayer,
                 "supported_players": str(maxplayers) if maxplayers > 0 else "?"
             }
     
+    # Any games that couldn't be retrieved probably dont exist. Store them so they don't trigger an IGDB fetch.
+    for nonexist_id in uncached_ids:
+        games_dict[nonexist_id] = {"steam_id": nonexist_id}
+    
     if len(games_dict) == 0:
-        return {"errcode":0, "games":{}}
+        return {"errcode":0, "games":cached_games}
+    
+    for id in games_dict.keys():
+        cached_games[id] = games_dict[id]
     
     update_cached_games(games_dict)
 
     return {
         "errcode": 0,
-        "games": games_dict
+        "games": cached_games
     }

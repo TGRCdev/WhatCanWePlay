@@ -175,7 +175,8 @@ html, body {
 }
 
 .game-cover {
-    height: 100%;
+    width: 42px;
+    height: 56px;
 }
 
 .user-name {
@@ -251,6 +252,31 @@ html, body {
     padding-right:10px;
     word-wrap:anywhere;
     text-align:center;
+}
+
+#error-div {
+    border: solid 1px #aa0c0c;
+    background-color: #3e1c1c;
+    display:flex;
+    flex-direction:column;
+    height:100%;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:10px;
+}
+
+#oh-no {
+    margin:0;
+    margin-bottom:10px;
+}
+
+#game-template {
+    display: none;
+}
+
+.user-number.short {
+    color: goldenrod;
 }
 
 /* Desktop Overrides */

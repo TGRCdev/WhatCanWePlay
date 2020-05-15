@@ -237,7 +237,7 @@ def get_friend_list_v1():
     return jsonify(friends_info["users"])
 
 # Errcodes
-# -1: Error without additional fields, display message
+# -1: An error occurred with a message. Additional fields: "message"
 # 0: No error
 # 1: User has private games list. Additional fields: "user"
 # 2: User has empty games list. Additional fields: "user"
@@ -261,7 +261,7 @@ def intersect_owned_games_v1():
     errcode, steam_info = fetch_steam_cookie(request)
     if "steam_id" not in steam_info.keys():
         return (
-            json.dumps({"message": "Not signed in to Steam", "errcode": -1}),
+            json.dumps({"message": "Not signed in to Steam. Please refresh the page and try again.", "errcode": -1}),
             403
         )
     
@@ -269,13 +269,13 @@ def intersect_owned_games_v1():
 
     if not isinstance(body, dict):
         return (
-            json.dumps({"message": "Was expecting JSON dictionary", "errcode": -1}),
+            json.dumps({"message": "Received a bad request. Please refresh the page and try again.", "errcode": -1}),
             400
         )
 
     if not body or "steamids" not in body.keys():
         return (
-            json.dumps({"message": "Missing required field \"steamids\"", "errcode": -1}),
+            json.dumps({"message": "Received a bad request. Please refresh the page and try again.", "errcode": -1}),
             400
         )
     
@@ -283,13 +283,19 @@ def intersect_owned_games_v1():
         steamids = set([int(id) for id in body["steamids"]])
     except (ValueError, TypeError):
         return (
-            json.dumps({"message": "steamids must be an array of integers or an array of strings parseable to an integer", "errcode": -1}),
+            json.dumps({"message": "Received a bad request. Please refresh the page and try again.", "errcode": -1}),
             400
         )
     
     if len(steamids) < 2:
         return (
-            json.dumps({"message": "Must have at least 2 users to intersect games", "errcode": -1}),
+            json.dumps({"message": "Must have at least 2 users to intersect games.", "errcode": -1}),
+            400
+        )
+    
+    if len(steamids) > 10:
+        return (
+            json.dumps({"message": "Games intersection is capped at 10 users.", "errcode": -1}),
             400
         )
     
@@ -306,34 +312,34 @@ def intersect_owned_games_v1():
 
         if errcode == 1:
             return (
-                json.dumps({"message": "Site has bad Steam API key. Please contact us about this error at " + contact_email, "errcode": -1}),
+                json.dumps({"message": "Site has bad Steam API key. Please contact us about this error at {}.".format(contact_email), "errcode": -1}),
                 500
             )
         elif errcode == 2:
             return (
-                json.dumps({"message": "Steam took too long to respond", "errcode": -1}),
+                json.dumps({"message": "Steam took too long to respond. Please try again later.", "errcode": -1}),
                 500
             )
         elif errcode == 3:
             return (
-                json.dumps({"message": "Steam took too long to transmit info", "errcode": -1}),
+                json.dumps({"message": "Steam took too long to transmit info. Please try again later.", "errcode": -1}),
                 500
             )
         elif errcode == 4:
             return (
-                json.dumps({"message": "Steam user has non-accessible games list", "user": steamid, "errcode": 1}),
+                json.dumps({"user": str(steamid), "errcode": 1}),
                 400
             )
         elif errcode == -1:
             return (
-                json.dumps({"message": "An unknown error occurred", "errcode": -1}),
+                json.dumps({"message": "An unknown error occurred. Please try again later.", "errcode": -1}),
                 500
             )
         
         games = user_owned_games.get("games")
         if len(games) == 0:
             return (
-                json.dumps({"message": "Steam user has empty games list", "user": steamid}),
+                json.dumps({"user": str(steamid), "errcode": 2}),
                 400
             )
         
@@ -348,61 +354,38 @@ def intersect_owned_games_v1():
             break
     
     # Step two: Fetch the game info
-    # TODO: IGDB info
+    game_info = get_steam_game_info(igdb_key, all_own, connect_timeout, read_timeout)
+
+    errcode = game_info["errcode"]
+
+    if errcode == 1:
+        return (
+            json.dumps({"message": "Site has bad IGDB API key. Please contact us about this error at {}.".format(contact_email), "errcode": -1}),
+            500
+        )
+    elif errcode == 2:
+        return (
+            json.dumps({"message": "IGDB took too long to respond. Try again later.", "errcode": -1}),
+            500
+        )
+    elif errcode == 3:
+        return (
+            json.dumps({"message": "IGDB took too long to transmit info. Try again later.", "errcode": -1}),
+            500
+        )
+    elif errcode == -1:
+        return (
+            json.dumps({"message": "An unknown error occurred. Try again later.", "errcode": -1}),
+            500
+        )
 
     print("returning intersected set")
 
     return jsonify({
         "message": "Intersected successfully",
-        "games": list(all_own),
+        "games": list(game_info.get("games", {}).values()),
         "errcode": 0
     })
-
-@app.route("/api/v1/get_steam_game_info", methods=["POST"] if not app.debug else ["POST", "GET"])
-def get_steam_game_info_v1():
-    if request.method == "GET":
-        params = [
-            {"name": "appids", "type": "csl:int"}
-        ]
-        return render_template(
-            "api_test.html",
-            api_function_name="get_steam_game_info",
-            api_version="v1",
-            api_function_params=json.dumps(params),
-            steam_info=fetch_steam_cookie(request)[1],
-            **basic_info_dict()
-        )
-    
-    errcode, steam_info = fetch_steam_cookie(request)
-    if "steam_id" not in steam_info.keys():
-        return (
-            json.dumps({"message": "Not signed in to Steam", "errcode": -1}),
-            403
-        )
-    
-    body = request.get_json(force=True, silent=True)
-
-    if not isinstance(body, dict):
-        return (
-            json.dumps({"message": "Was expecting JSON dictionary", "errcode": -1}),
-            400
-        )
-
-    if not body or "appids" not in body.keys():
-        return (
-            json.dumps({"message": "Missing required field \"appids\"", "errcode": -1}),
-            400
-        )
-    
-    try:
-        appids = set([int(id) for id in body["appids"]])
-    except (ValueError, TypeError):
-        return (
-            json.dumps({"message": "appids must be an array of integers or an array of strings parseable to an integer", "errcode": -1}),
-            400
-        )
-    
-    return jsonify(get_steam_game_info(igdb_key, appids))
 
 if __name__ == "__main__":
     app.run()
