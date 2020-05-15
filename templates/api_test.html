@@ -57,6 +57,12 @@
             <button id="submit" onclick="submitRaw()">Submit POST Request</button>
         </div>
     </div>
+    {% if not steam_info %}
+    <div id="not-logged-in">
+        You are not signed in to Steam! Most API endpoints will NOT serve your requests without being signed in to Steam!<br>
+        Click <form id="sign-in-form" method="POST" action="/steam_login"><input type="submit" value="here"></form> to sign in.
+    </div>
+    {% endif %}
     <textarea id="response" placeholder="Response" readonly></textarea>
 </div>
 {% endblock %}

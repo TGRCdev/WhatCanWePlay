@@ -138,6 +138,10 @@ html, body {
     grid-row-end: 4;
     grid-column: 2;
     word-wrap:anywhere;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    overflow-y: auto;
 }
 
 #main-user {
@@ -146,18 +150,32 @@ html, body {
     border-bottom-width:10px;
 }
 
-.user {
-    height: 58px;
-    min-height: 58px;
+.list-item {
     background-color: #262626;
     border-bottom: solid 3px #131313;
     display: flex;
     flex-direction: row;
     align-items: center;
+    overflow:hidden;
+}
+
+.user {
+    height: 58px;
+    min-height: 58px;
     padding-left:10px;
     padding-right:10px;
     justify-content: space-between;
-    overflow:hidden;
+}
+
+.game {
+    height: 56px;
+    min-height: 56px;
+    padding: 3px;
+    justify-content:space-between;
+}
+
+.game-cover {
+    height: 100%;
 }
 
 .user-name {
@@ -209,6 +227,30 @@ html, body {
     border-bottom: solid 3px #131313;
     color: white;
     padding:5px;
+}
+
+.user-count {
+    font-size:28px;
+    margin-right:10px;
+    min-width:max-content;
+    text-align:center;
+}
+
+.supports {
+    font-size:12px;
+    display:block;
+}
+
+.users-icon {
+    display:inline;
+    height:24px;
+}
+
+.game-title {
+    padding-left:10px;
+    padding-right:10px;
+    word-wrap:anywhere;
+    text-align:center;
 }
 
 /* Desktop Overrides */

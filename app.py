@@ -139,12 +139,6 @@ def privacy():
 
 @app.route("/steam_login", methods=["GET", "POST"])
 def steam_login():
-    if not app.debug:
-        return (
-            'Steam login is currently disabled<br/><a href="/">Click here to go back home</a>',
-            403
-        )
-    
     if request.method == "POST":
         steam_openid_url = 'https://steamcommunity.com/openid/login'
         return_url = url_for("steam_login", _external=True)
@@ -197,6 +191,7 @@ def get_friend_list_v1():
             api_function_name="get_friend_list",
             api_version="v1",
             api_function_params=[],
+            steam_info=fetch_steam_cookie(request)[1],
             **basic_info_dict()
         )
     errcode, steam_info = fetch_steam_cookie(request)
@@ -251,13 +246,14 @@ def intersect_owned_games_v1():
     if request.method == "GET":
         params = [
             {"name": "steamids", "type":"csl:string"},
-            {"name": "include_free_games", "type":"bool", "default": True}
+            {"name": "include_free_games", "type":"bool", "default": False}
         ]
         return render_template(
             "api_test.html",
             api_function_name="intersect_owned_games",
             api_version="v1",
             api_function_params=json.dumps(params),
+            steam_info=fetch_steam_cookie(request)[1],
             **basic_info_dict()
         )
     print("intersect_owned_games received POST request")

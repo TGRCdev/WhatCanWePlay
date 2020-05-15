@@ -39,7 +39,7 @@
 {% block content %}
 <div id="app" class="on-users">
     <div id="users">
-        <div id="main-user" class="user" data-visibility="{{ steam_info.visibility }}">
+        <div id="main-user" class="user list-item" data-visibility="{{ steam_info.visibility }}">
             <img class="user-img" src="{{ steam_info.avatar }}"/>
             <span class="user-name">{{ steam_info.screen_name }}</span>
             <button class="user-checkbox" data-steam-id="{{ steam_info.steam_id }}" onclick="userCheckboxClicked(this)">
@@ -58,7 +58,14 @@
         <button class="slide-button" id="back-button">Go Back</button>
     </div>
     <div id="games">
-        Games List
+        <div class="game list-item">
+            <img src="https://images.igdb.com/igdb/image/upload/t_cover_small/co1nhi.jpg" class="game-cover" />
+            <div class="game-title">Grand Theft Auto V</div>
+            <div class="user-count">
+                <span class="supports">Supports</span>
+                <img class="users-icon" src="{{ url_for('static', filename='images/users-icon.svg') }}" alt="User Count" /> 5
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
