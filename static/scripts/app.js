@@ -145,7 +145,6 @@ function submitButtonClicked()
 }
 
 function intersectResponse(data) {
-    console.log(typeof(data["user"]))
     if(data["errcode"] == 1)
     { // User has non-visible games list
         displayError("WhatCanWePlay cannot access the games list of " + user_info[data["user"]]["screen_name"] + ". You can try one of the following fixes:\
@@ -223,8 +222,6 @@ function intersectResponse(data) {
                 }
             }
         })
-
-        console.log(gameinfo)
 
         gameinfo.forEach(function(game) { // Render new results
             if(!game["name"])

@@ -63,12 +63,12 @@
             <div id="error-info">An unknown error occurred. Please try again later.</div>
         </div>
         <div id="game-template" class="game list-item">
-            <img src="https://images.igdb.com/igdb/image/upload/t_cover_small/co1nhi.jpg" class="game-cover" />
-            <div class="game-title">Grand Theft Auto V</div>
+            <img src="{{ url_for('static', filename='images/default_cover.jpg') }}" class="game-cover" />
+            <div class="game-title"></div>
             <div class="user-count">
                 <span class="supports">Supports</span>
                 <img class="users-icon" src="{{ url_for('static', filename='images/users-icon.svg') }}" alt="User Count" />
-                <span class="user-number">5</span>
+                <span class="user-number">?</span>
             </div>
         </div>
     </div>

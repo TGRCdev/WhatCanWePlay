@@ -66,7 +66,6 @@ def get_cached_games(appids: Collection[int]) -> Dict[int, Dict[str, Any]]:
     }
 
 def update_cached_games(game_info: Mapping[int, Mapping[str, Any]]):
-    print("updating " + str(game_info))
     query = """
     INSERT OR REPLACE INTO game_info
     (steam_id, igdb_id, name, cover_id, has_multiplayer, supported_players, time_cached)
@@ -106,7 +105,6 @@ def get_steam_game_info(webkey: str, appids: Collection[int], connect_timeout: O
     cached_games = get_cached_games(appid_set)
 
     if len(cached_games) == len(appid_set):
-        print("retrieved from cache")
         return {"errcode": 0, "games": cached_games}
 
     uncached_ids = appid_set - set(cached_games.keys())

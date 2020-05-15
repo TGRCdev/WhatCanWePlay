@@ -256,7 +256,6 @@ def intersect_owned_games_v1():
             steam_info=fetch_steam_cookie(request)[1],
             **basic_info_dict()
         )
-    print("intersect_owned_games received POST request")
     
     errcode, steam_info = fetch_steam_cookie(request)
     if "steam_id" not in steam_info.keys():
@@ -303,11 +302,8 @@ def intersect_owned_games_v1():
 
     all_own = None
 
-    print("request valid. retrieving users games")
-
     for steamid in steamids:
         user_owned_games = get_owned_steam_games(steam_key, steamid, free_games, connect_timeout, read_timeout)
-        print("retrieved a user's games")
         errcode = user_owned_games["errcode"]
 
         if errcode == 1:
@@ -345,10 +341,8 @@ def intersect_owned_games_v1():
         
         if not all_own:
             all_own = set(games)
-            print("set initialized. length: " + str(len(all_own)))
         else:
             all_own = all_own & set(games)
-            print("set intersected. length: " + str(len(all_own)))
         
         if len(all_own) == 0:
             break
@@ -378,8 +372,6 @@ def intersect_owned_games_v1():
             json.dumps({"message": "An unknown error occurred. Try again later.", "errcode": -1}),
             500
         )
-
-    print("returning intersected set")
 
     return jsonify({
         "message": "Intersected successfully",
