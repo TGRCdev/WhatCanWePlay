@@ -41,7 +41,10 @@
     <div id="users">
         <div id="main-user" class="user list-item" data-visibility="{{ steam_info.visibility }}">
             <img class="user-img" src="{{ steam_info.avatar }}"/>
-            <span class="user-name">{{ steam_info.screen_name }}</span>
+            <div class="user-name">
+                <div>{{ steam_info.screen_name }}</div>
+                <a style="display:block" href="/steam_logout">Sign out</a>
+            </div>
             <button class="user-checkbox" data-steam-id="{{ steam_info.steam_id }}" onclick="userCheckboxClicked(this)">
                 <div class="user-checkbox-fill" style="display:none;"></div>
             </button>
