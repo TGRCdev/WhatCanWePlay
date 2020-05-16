@@ -75,6 +75,10 @@ html, body {
     color: whitesmoke;
 }
 
+#donate {
+    color:gold; /* give me money */
+}
+
 /* Desktop Overrides */
 @media (min-width: 601px) {
     #body-box {

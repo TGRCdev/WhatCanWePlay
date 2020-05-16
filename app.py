@@ -38,6 +38,7 @@ source_url = config.get("source-url", "")
 contact_email = config["contact-email"]
 privacy_email = config.get("privacy-email", contact_email)
 connect_timeout = config.get("connect-timeout", 0.0)
+donate_url = config.get("donate-url", "")
 if connect_timeout <= 0.0:
     connect_timeout = None
 read_timeout = config.get("read-timeout", 0.0)
@@ -63,7 +64,8 @@ def basic_info_dict():
     return {
         "contact_email_user_reversed": email_rev[0][::-1],
         "contact_email_domain_reversed": email_rev[1][::-1],
-        "source_url": source_url
+        "source_url": source_url,
+        "donate_url": donate_url
     }
 
 # Tries to fetch the Steam info cookie, returns an errcode and a dict
