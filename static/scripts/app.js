@@ -147,9 +147,10 @@ function submitButtonClicked()
 function intersectResponse(data) {
     if(data["errcode"] == 1)
     { // User has non-visible games list
-        displayError("WhatCanWePlay cannot access the games list of " + user_info[data["user"]]["screen_name"] + ". You can try one of the following fixes:\
-        <br><br>    - Ask " + user_info[data["user"]]["screen_name"] + " to set their Game details to Public\
-        <br>    - Remove " + user_info[data["user"]]["screen_name"] + " from your selected users\
+        displayError("WhatCanWePlay cannot access the games list of " + user_info[data["user"]]["screen_name"] + ". This either means that their Game details visibility is not Public, or they are being rate-limited by Steam for having too many requests. You can try one of the following fixes:\
+        <br><br>- Ask " + user_info[data["user"]]["screen_name"] + " to set their Game details to Public\
+        <br>- Remove " + user_info[data["user"]]["screen_name"] + " from your selected users\
+        <br>- Try again later\
         ");
         return;
     }
@@ -175,35 +176,51 @@ function intersectResponse(data) {
         // Sort data
         // TODO: Filter options
         gameinfo.sort(function(a, b) {
-            // This is a weak sort, it only sorts games with less than the selected players below the games above or equal, or with unknown player counts
-            a_val = selected_users.size;
-            b_val = selected_users.size;
+            // This is intentionally a weak sort. It sorts games into three sections in descending order:
+            //
+            // Top: Games with supported user counts above the selected user count (intentionally unordered)
+            // Middle: Games with unknown supported user counts (Could be above, could be below?)
+            // Bottom: Games below the selected user count
+            //
+            // The Top section is intentionally unsorted because we aren't looking for games with the highest
+            // player count, we're looking for a game to play with friends.
+            a_val = a["supported_players"]
+            b_val = b["supported_players"]
 
-            a_actual = a["supported_players"]
-            b_actual = b["supported_players"]
-            
-            if(a_actual && a_actual != "?")
-            {
-                a_val = parseInt(a_actual);
-            }
-            if(b_actual && b_actual != "?")
-            {
-                b_val = parseInt(b_actual);
-            }
+            a_compval = (a_val == "?" ? selected_users.size : parseInt(a_val))
+            b_compval = (b_val == "?" ? selected_users.size : parseInt(b_val))
 
-            if(a_val > b_val)
+            if(a_val == "?")
             {
-                return -1;
+                if(b_val == "?")
+                {
+                    return 0;
+                }
+                else if(b_compval < selected_users.size)
+                {
+                    return -1;
+                }
+                else
+                {
+                    return 1;
+                }
             }
-            else if(b_val > a_val)
+            else if(b_val == "?")
             {
-                return 1;
+                if(a_compval < selected_users.size)
+                {
+                    return 1;
+                }
+                else
+                {
+                    return -1;
+                }
             }
             else
             {
-                if(a_actual == "?")
+                if(a_compval < selected_users.size)
                 {
-                    if(b_actual == "?")
+                    if(b_compval < selected_users.size)
                     {
                         return 0;
                     }
@@ -212,7 +229,7 @@ function intersectResponse(data) {
                         return 1;
                     }
                 }
-                else if(b_actual == "?")
+                else if(b_compval < selected_users.size)
                 {
                     return -1;
                 }
