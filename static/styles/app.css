@@ -340,15 +340,15 @@ html, body {
 
     @keyframes to-games {
         from {
-            right: 0%;
+            left: 0%;
         }
         to {
-            right: 100%;
+            left: -100%;
         }
     }
 
     .on-games {
-        right: 100%;
+        left: -100%;
     }
 
     .slide-to-users {
@@ -359,14 +359,14 @@ html, body {
 
     @keyframes to-users {
         from {
-            right: 100%;
+            left: -100%;
         }
         to {
-            right: 0%;
+            left: 0%;
         }
     }
 
     .on-users {
-        right: 0%;
+        left: 0%;
     }
 }

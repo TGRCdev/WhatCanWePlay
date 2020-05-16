@@ -29,7 +29,6 @@ a:visited {
 }
 html, body {
     min-height: 100%;
-    min-width: 320px;
     height: 100%;
     margin: 0;
 }
