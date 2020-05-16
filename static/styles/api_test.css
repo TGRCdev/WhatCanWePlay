@@ -1,0 +1,163 @@
+/*
+    This file is a part of WhatCanWePlay
+    Copyright (C) 2020 TGRCDev
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
+#endpoint-name {
+    font-family: monospace;
+}
+
+#test {
+    text-align:center;
+}
+
+textarea, input {
+    background-color: #242424;
+    border-color: #131313;
+    border-style: solid;
+    color: whitesmoke;
+}
+
+#tabbox {
+    background-color: #121212;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+}
+
+#tabs {
+    margin-top: 5px;
+    display: flex;
+    justify-content: center;
+    gap: 3px;
+}
+
+.tab-content.active {
+    display: initial;
+}
+
+.tab-content {
+    display: none;
+    background-color: #303030;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+    padding-top: 5px;
+}
+
+#response {
+    margin-top: 20px;
+    width: 100%;
+    height: 200px;
+}
+
+#raw {
+    padding: 6px;
+}
+
+#raw.active {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#field-table {
+    grid-template-columns: auto auto auto;
+    gap: 3px;
+    padding: 5px;
+    display: grid;
+}
+
+#fields.active {
+    display: initial;
+}
+
+#field-table>div {
+    background: #131313;
+    padding:3px;
+}
+
+#raw-input {
+    width: 90%;
+    height: 100px;
+}
+
+.tab {
+    border: 0;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    background: linear-gradient(#303030, #303030, #121212);
+    color: whitesmoke;
+    cursor: pointer;
+}
+
+.tab.selected {
+    background: #303030;
+}
+
+button {
+    background-color: #383838;
+    border-color: #161616;
+    border-style: solid;
+    color: whitesmoke;
+}
+
+button:hover {
+    border-color: #787878;
+}
+
+button:active {
+    background-color: #646464;
+}
+
+#fields-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+}
+
+#fields-buttons>button {
+    margin-bottom: 6px;
+    padding:4px;
+}
+
+#no-params {
+    grid-column-start: 1;
+    grid-column-end: 4;
+    color: grey;
+}
+
+#not-logged-in {
+    background-color:darkred;
+    border: solid 2px black;
+    color: whitesmoke;
+    margin-top:20px;
+    padding: 5px;
+}
+
+#sign-in-form {
+    display: inline;
+    padding: 0;
+}
+
+#sign-in-form>input {
+    border: 0;
+    background: none;
+    text-decoration: underline;
+    color: grey;
+    padding: 0;
+    cursor: pointer;
+    font-size: 16px;
+}

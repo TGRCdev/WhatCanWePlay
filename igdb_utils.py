@@ -15,125 +15,166 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import requests
+import json
+import sqlite3
+from requests.exceptions import ConnectTimeout, ReadTimeout
+from typing import Dict, Collection, Any, Mapping, Optional
+from datetime import timedelta, datetime, timezone
 
 api_base = "https://api-v3.igdb.com/"
 
-def get_steam_game_igdb_id(apikey: str, appids):
-    if isinstance(appids, (str, int)): # Single game id
-        appids = [str(appids)]
-    
-    game_data = {}
-    
-    i = 0
-    id_str = "("
-    for appid in appids:
-        id_str += '"' + appid + '"'
-        i += 1
-        if i % 500 == 0 or i == len(appids):
-            id_str += ")"
+config = json.load(open("config.json", "r"))
+debug = config.get("debug", config.get("DEBUG", False))
+db_filename = config.get("igdb-cache-filename", "igdb-cache.sqlite")
 
-            r = requests.post(api_base + "external_games",
-                data="fields uid,game; where uid = {} & category = 1; limit {};".format(id_str, min(500, len(appids))),
-                headers={"user-key": apikey, "Accept": "application/json"}
-            )
-            r.raise_for_status()
+info_age_dict = config.get("igdb-cache-info-age", {})
+info_age = timedelta(**info_age_dict).total_seconds()
 
-            id_str = "("
+def get_cached_games(appids: Collection[int]) -> Dict[int, Dict[str, Any]]:
+    query = """
+    SELECT steam_id, igdb_id, name, cover_id, has_multiplayer, supported_players
+    FROM game_info
+    WHERE time_cached < ? AND steam_id in ({})
+    """.format(",".join(
+        ["?" for _ in range(len(appids))]
+    ))
+    db_handle = sqlite3.connect(db_filename)
+    db_handle.execute("""
+    CREATE TABLE IF NOT EXISTS game_info (
+        steam_id INTEGER PRIMARY KEY,
+        igdb_id INTEGER,
+        name TEXT,
+        cover_id TEXT,
+        has_multiplayer BOOL,
+        supported_players TEXT,
+        time_cached REAL
+    );
+    """)
+    cursor = db_handle.cursor()
+    cursor.execute(query, [datetime.now(timezone.utc).timestamp() - info_age, *list(appids)])
+    results = cursor.fetchall()
 
-            response = r.json()
-            for game in response:
-                game_info = {}
-                appid = str(game["uid"])
-                igdb_id = str(game["game"])
-                game_info["steam_id"] = appid
-                game_info["igdb_id"] = igdb_id
-                game_data[appid] = game_info
-        else:
-            id_str += ","
+    return {
+        game[0]: {
+            "steam_id": game[0],
+            "name": game[2],
+            "cover_id": game[3],
+            "has_multiplayer": game[4],
+            "supported_players": game[5]
+        } if game[1] else {}
+        for game in results
+    }
 
-    return game_data
+def update_cached_games(game_info: Mapping[int, Mapping[str, Any]]):
+    query = """
+    INSERT OR REPLACE INTO game_info
+    (steam_id, igdb_id, name, cover_id, has_multiplayer, supported_players, time_cached)
+    VALUES (?,?,?,?,?,?,?)
+    """
+    db_handle = sqlite3.connect(db_filename)
+    db_handle.execute("""
+    CREATE TABLE IF NOT EXISTS game_info (
+        steam_id INTEGER PRIMARY KEY,
+        igdb_id INTEGER,
+        name TEXT,
+        cover_id TEXT,
+        has_multiplayer BOOL,
+        supported_players TEXT,
+        time_cached REAL
+    );
+    """)
+    cursor = db_handle.cursor()
+    cursor.execute("BEGIN TRANSACTION")
+    cursor.executemany(query, [[
+        game.get("steam_id"),
+        game.get("igdb_id"),
+        game.get("name"),
+        game.get("cover_id"),
+        game.get("has_multiplayer"),
+        game.get("supported_players"),
+        datetime.now(timezone.utc).second] for game in game_info.values()]
+    )
+    cursor.execute("END TRANSACTION")
 
-def get_game_info(apikey: str, igdb_ids, fields="name,platforms,tags,game_modes,genres"):
-    if isinstance(igdb_ids, (str, int)): # Single game id
-        igdb_ids = [str(igdb_ids)]
-    if len(igdb_ids) == 0:
-        return {}
-    if fields == "":
-        return {}
-    
-    id_str = "("
-
-    game_data = {}
-
-    i = 0
-    for id in igdb_ids:
-        id_str += str(id)
-        i += 1
-        if i % 500 == 0 or i == len(igdb_ids):
-            id_str += ")"
-
-            print("fields {}; where id = {}; limit {};".format(fields, id_str, min(500, len(igdb_ids))))
-
-            r = requests.post(api_base + "games",
-                data="fields {}; where id = {}; limit {};".format(fields, id_str, min(500, len(igdb_ids))),
-                headers={"Accept": "application/json", "user-key": apikey}
-            )
-            r.raise_for_status()
-
-            id_str = "("
-
-            response = r.json()
-            
-            for game in response:
-                igdb_id = str(game.pop("id"))
-                game["igdb_id"] = igdb_id
-                game_data[igdb_id] = game
-        else:
-            id_str += ","
-    
-    return game_data
-
-# Returns the IGDB info for all the defined steam games. If no info is found, sets the key to an empty dictionary
-def get_steam_game_info(apikey: str, appids, fields="name,platforms,tags,game_modes,genres"):
-    if isinstance(appids, (str, int)): # Single game id
-        appids = [str(appids)]
+def get_steam_game_info(webkey: str, appids: Collection[int], connect_timeout: Optional[float] = None, read_timeout: Optional[float] = None) -> Dict[int, Dict[str, Any]]:
     if len(appids) == 0:
-        return {}
-
-    game_data = {} # Key is steam app id
-    igdb_to_steam = {} # Key is IGDB id
+        return {"errcode":0, "games":{}}
     
-    # Step 1: Convert steam_id to igdb_id
-    game_data = get_steam_game_igdb_id(apikey, appids)
-    bad_entries = []
-    for game in game_data.values():
-        if game["igdb_id"] in igdb_to_steam.keys():
-            print("DUPLICATE FOUND! (IGDB ID: {}, First Steam ID: {}, Duplicate Steam ID: {}) Ignoring...".format(game["igdb_id"], igdb_to_steam[game["igdb_id"]], game["steam_id"]))
-            bad_entries.append(game["steam_id"])
-        else:
-            igdb_to_steam[game["igdb_id"]] = game["steam_id"]
+    appid_set = set(appids)
     
-    for steam_id in bad_entries:
-        game_data.pop(steam_id)
+    cached_games = get_cached_games(appid_set)
+
+    if len(cached_games) == len(appid_set):
+        return {"errcode": 0, "games": cached_games}
+
+    uncached_ids = appid_set - set(cached_games.keys())
+    uncached_ids_list = list(uncached_ids)
+
+    games_dict = {}
+    retrieved_games = 0
+    while retrieved_games < len(uncached_ids_list):
+        game_slice = uncached_ids_list[retrieved_games:500]
+
+        retrieved_games += len(game_slice)
+
+        try:
+            r = requests.post(
+                api_base + "external_games",
+                data = "fields uid,game.name,game.game_modes,game.multiplayer_modes.onlinemax,game.multiplayer_modes.onlinecoopmax,game.cover.image_id; where uid = ({}) & category = 1; limit {};".format(",".join(map(str, game_slice)), len(game_slice)),
+                headers = {
+                    "user-key": webkey, "Accept": "application/json"
+                },
+                timeout = (connect_timeout, read_timeout)
+            )
+        except ConnectTimeout:
+            return {"errcode": 2}
+        except ReadTimeout:
+            return {"errcode": 3}
+        if r.status_code == 403:
+            return {"errcode": 1}
+        elif r.status_code != 200:
+            if debug:
+                r.raise_for_status()
+            return {"errcode": -1}
+        
+        for game in r.json():
+            steam_id = int(game["uid"])
+            uncached_ids.discard(steam_id)
+            game = game["game"]
+
+            game_modes = game.get("game_modes", [])
+
+            is_multiplayer = (2 in game_modes or 5 in game_modes)
+
+            maxplayers = -1
+            if is_multiplayer:
+                for mode in game.get("multiplayer_modes", []):
+                    maxplayers = max(max(mode.get("onlinemax", 1), mode.get("onlinecoopmax", 1)), maxplayers)
+            else:
+                maxplayers = 1
+
+            games_dict[steam_id] = {
+                "steam_id": steam_id,
+                "igdb_id": game["id"],
+                "name": game["name"],
+                "cover_id": game.get("cover", {}).get("image_id", ""),
+                "has_multiplayer": is_multiplayer,
+                "supported_players": str(maxplayers) if maxplayers > 0 else "?"
+            }
     
-    # From this point, do not use appids. Only use the game_data dictionary.
+    # Any games that couldn't be retrieved probably dont exist. Store them so they don't trigger an IGDB fetch.
+    for nonexist_id in uncached_ids:
+        games_dict[nonexist_id] = {"steam_id": nonexist_id}
+    
+    if len(games_dict) == 0:
+        return {"errcode":0, "games":cached_games}
+    
+    for id in games_dict.keys():
+        cached_games[id] = games_dict[id]
+    
+    update_cached_games(games_dict)
 
-    # Step 2: Get info for all games in the IGDB
-    # Setup IDs
-    if len(game_data) == 0:
-        return {}
-
-    igdb_data = get_game_info(apikey, igdb_to_steam.keys())
-    for igdb_game in igdb_data.values():
-        igdb_key = igdb_game["igdb_id"]
-        steam_key = igdb_to_steam[igdb_key]
-        igdb_game["steam_id"] = steam_key
-        game_data[steam_key] = igdb_game
-
-    return game_data
-
-def get_api_status(apikey:str):
-    r = requests.get(api_base + "api_status", headers={"user-key": apikey})
-    r.raise_for_status()
-
-    return r.json()
+    return {
+        "errcode": 0,
+        "games": cached_games
+    }

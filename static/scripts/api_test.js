@@ -16,7 +16,39 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-function createTypeInput(type)
+var fields = {}
+
+var raw_box;
+var response_box;
+
+function showTab(tabname)
+{
+    var tabs = document.getElementsByClassName("tab");
+    Array.from(tabs).forEach(function(tab) {
+        if(tab.id == tabname + "-tab")
+        {
+            tab.classList.add("selected");
+        }
+        else
+        {
+            tab.classList.remove("selected");
+        }
+    });
+
+    var tabcontents = document.getElementsByClassName("tab-content");
+    Array.from(tabcontents).forEach(function(tab) {
+        if(tab.id == tabname)
+        {
+            tab.classList.add("active");
+        }
+        else
+        {
+            tab.classList.remove("active");
+        }
+    });
+}
+
+function createInput(type)
 {
     var input;
     switch(type)
@@ -40,134 +72,170 @@ function createTypeInput(type)
             input = document.createElement("input")
             input.type = "number"
             input.placeholder = "int"
+            break;
         case "bool":
             input = document.createElement("input")
             input.type = "checkbox"
+            break;
         default:
             input = document.createElement("input")
             input.type = "text"
+            break;
     }
 
     return input;
 }
 
-var params_data;
-
-window.onload = function() {
-    var function_data = document.getElementById("function-data").dataset
-    this.console.log(function_data.functionParams)
-    params_data = JSON.parse(function_data.functionParams)
-    this.console.log(typeof(params_data))
-    var param_table = document.getElementById("function-params-table")
-
-    var type_strings = {
-        "csl:string": "comma-separated strings",
-        "csl:int": "comma-separated ints",
-    }
-
-    for(var i = 0; i < params_data.length; i++)
+function getTypeString(type)
+{
+    switch(type)
     {
-        var param = params_data[i]
-        this.console.log(param)
-        var row = param_table.insertRow()
-        var type = param["type"]
-        var name = param["name"]
-        var type_str = type_strings[type]
-        if(type_str == null)
-        {
-            type_str = type
-        }
-        var name_cell = row.insertCell()
-        name_cell.innerHTML = name
-        var type_cell = row.insertCell()
-        type_cell.innerHTML = type_str
-        var value_cell = row.insertCell()
-        var value_input = createTypeInput(type)
-        value_input.id = name
-        value_cell.appendChild(value_input)
+        case "csl:string":
+            return "comma-separated strings";
+        case "csl:int":
+            return "comma-separated ints";
+        default:
+            return type;
     }
-
-    if(this.params_data.length == 0)
-    {
-        var noparams_row = param_table.insertRow()
-        var noparams_cell = noparams_row.insertCell()
-        noparams_cell.colSpan = 3
-        noparams_cell.style = "text-align:center;color:grey;"
-        noparams_cell.innerHTML = "< no parameters >"
-    }
-
-    var submit_row = param_table.insertRow()
-    var submit_cell = submit_row.insertCell()
-    submit_cell.colSpan = 3
-    submit_cell.style = "text-align:center;"
-    var submit_button = document.createElement("button")
-    submit_button.style = "display:inline-block;"
-    submit_button.innerHTML = "Submit POST Request"
-    submit_button.onclick = getAndSubmit
-    submit_button.id = "submit-request"
-    submit_cell.appendChild(submit_button)
 }
 
-function responseReceived(response)
+function getInputValue(input, type)
 {
-    var response_box = document.getElementById("response")
-    var submit_button = document.getElementById("submit-request")
-    response.text().then(function(text){response_box.innerHTML = text;submit_button.disabled = false;})
-    // i hate futures so much
+    switch(type)
+    {
+        case "csl:string":
+        case "csl:int": // The endpoints should take ints as strings too
+            var strings = []
+            var input_txt = input.value;
+            input_txt.split(",").forEach(function(str) {
+                strings.push(str)
+            });
+            return strings;
+        case "bool":
+            return input.checked;
+        default:
+            return input.value;
+    }
 }
 
-function getAndSubmit()
+function setDefaultValue(input, param)
 {
-    var submit_button = document.getElementById("submit-request")
-    var response_box = document.getElementById("response")
-    response_box.placeholder = "Submitting request..."
-    response_box.innerHTML = ""
-    submit_button.disabled = true;
-
-    var request_data = {}
-    for(var i = 0; i < params_data.length; i++)
+    if(!param || param["default"] == undefined)
     {
-        var param = params_data[i]
-        var name = param["name"]
-        var type = param["type"]
-        var elem = document.getElementById(name)
-        var value = elem.value
-        switch(type)
-        {
-            case "int":
-                value = parseInt(value)
-                break;
-            case "csl:string":
-                if(value.length == 0)
-                    { value = []; break}
-                var list = value.split(",")
-                for(var j = 0; j < list.length; j++)
-                {
-                    list[j] = list[j].trim()
-                }
-                value = list
-                break;
-            case "csl:int":
-                if(value.length == 0)
-                    { value = []; break}
-                var list = value.split(",")
-                for(var j = 0; j < list.length; j++)
-                {
-                    list[j] = parseInt(list[j].trim())
-                }
-                value = list
-                break;
-            default:
-                break;
-        }
-
-        request_data[name] = value
+        return;
     }
 
-    response_box.placeholder = "Waiting for response..."
-    console.log(JSON.stringify(request_data))
-    fetch("", {
-        method: 'post',
-        body: JSON.stringify(request_data)
-    }).then(responseReceived)
+    switch(param["type"])
+    {
+        case "bool":
+            input.checked = param["default"]
+            break;
+        default:
+            input.value = param["default"]
+            break;
+    }
+}
+
+function inputIsBlank(input, param)
+{
+    if(param["default"] != undefined && getInputValue(input, param["type"]) == param["default"])
+    {
+        return true;
+    }
+
+    switch(param["type"])
+    {
+        case "bool":
+            return false;
+        default:
+            return !input.value;
+    }
+}
+
+window.addEventListener("load", function() {
+    var params = document.getElementById("field-table");
+    raw_box = document.getElementById("raw-input");
+    response_box = document.getElementById("response");
+
+    if(param_info && param_info.length > 0)
+    {
+        document.getElementById("no-params").remove();
+
+        param_info.forEach(function(param) {
+            var name = document.createElement("div");
+            name.innerHTML = param["name"];
+            params.appendChild(name);
+
+            var type = document.createElement("div");
+            type.innerHTML = getTypeString(param["type"]);
+            params.appendChild(type);
+
+            var input = createInput(param["type"]);
+            param["input"] = input;
+            fields[param["name"]] = param;
+
+            if(param["type"] == "bool")
+            {
+                var container = document.createElement("div");
+                container.appendChild(input);
+                params.appendChild(container);
+            }
+            else
+            {
+                params.appendChild(input);
+            }
+
+            setDefaultValue(input, param);
+        });
+    }
+});
+
+function fieldsToJson()
+{
+    var info_dict = {};
+
+    Object.values(fields).forEach(function(param) {
+        var name = param["name"];
+        var type = param["type"];
+        var input = param["input"];
+        if(!inputIsBlank(input, param))
+        {
+            info_dict[name] = getInputValue(input, type);
+        }
+    });
+
+    return JSON.stringify(info_dict, null, 2);
+}
+
+function fieldsToRaw()
+{
+    raw_box.value = fieldsToJson();
+    showTab("raw");
+}
+
+function submitRequest(body)
+{
+    response_box.value = "";
+    response_box.placeholder = "Fetching response..."
+
+    timeout(
+        fetch("", {
+            method: 'post',
+            body: body
+        })
+    , 30000).then((response) => response.text()).then((text) => {
+        response_box.value = text;
+    }).catch((err) => {
+        response_box.value = err;
+    });
+}
+
+function submitFields()
+{
+    submitRequest(fieldsToJson());
+}
+
+function submitRaw()
+{
+    submitRequest(raw_box.value);
 }

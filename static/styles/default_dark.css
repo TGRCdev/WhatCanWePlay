@@ -21,15 +21,14 @@ html {
     background-color: #202020;
     font-family: "Trebuchet MS", Helvetica, sans-serif;
 }
-html a:link {
+a:link {
     color: gray;
 }
-html a:visited {
+a:visited {
     color: gray;
 }
 html, body {
     min-height: 100%;
-    min-width: 320px;
     height: 100%;
     margin: 0;
 }
@@ -47,11 +46,12 @@ html, body {
 }
 
 #header-box {
-    background: linear-gradient(#262626, #131313)
+    background: linear-gradient(#262626, #131313);
+    text-align: center;
+    padding-top: 12px;
+    box-sizing: border-box;
 }
-#body-box * {
-    max-width: 1000px;
-}
+
 #footer-box {
     background: #131313;
     display: flex;
@@ -64,11 +64,8 @@ html, body {
 }
 
 #title-link {
-    display:block;
-    margin:auto;
     text-align:center;
-    font-size: 35px;
-    padding-top:7px;
+    font-size: 30px;
     text-decoration: none;
 }
 #title-link:link {
@@ -76,4 +73,15 @@ html, body {
 }
 #title-link:visited {
     color: whitesmoke;
+}
+
+#donate {
+    color:gold; /* give me money */
+}
+
+/* Desktop Overrides */
+@media (min-width: 601px) {
+    #body-box {
+        max-width: 1000px;
+    }
 }
