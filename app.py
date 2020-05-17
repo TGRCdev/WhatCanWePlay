@@ -50,6 +50,17 @@ app = Flask(__name__)
 app.debug = debug
 app.secret_key = secrets.token_hex() if not app.debug else "DEBUG_SECRET_KEY_BANANA_BREAD" # Prevents invalidating cookies when hot-reloading
 
+# Hide requests to /steam_login to prevent linking Steam ID to IP in logs
+from werkzeug import serving
+parent_log_request = serving.WSGIRequestHandler.log_request
+def log_request(self, *args, **kwargs):
+    if self.path.startswith("/steam_login"):
+        self.log("info", "[request to /steam_login hidden]")
+        return
+    
+    parent_log_request(self, *args, **kwargs)
+serving.WSGIRequestHandler.log_request = log_request
+
 # Setup cookie max_age
 cookie_max_age = timedelta(**cookie_max_age_dict).total_seconds()
 if cookie_max_age == 0:
