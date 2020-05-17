@@ -48,7 +48,7 @@ if read_timeout <= 0.0:
 # Create uWSGI callable
 app = Flask(__name__)
 app.debug = debug
-app.secret_key = secrets.token_hex() if not app.debug else "DEBUG_SECRET_KEY_BANANA_BREAD" # Prevents invalidating cookies when hot-reloading
+app.secret_key = config.get("secret-key", secrets.token_hex()) # If not set, cookies will be invalidated every time the app is reloaded
 
 # Hide requests to /steam_login to prevent linking Steam ID to IP in logs
 from werkzeug import serving
