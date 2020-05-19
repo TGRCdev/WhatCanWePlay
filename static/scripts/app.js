@@ -78,7 +78,16 @@ window.addEventListener("load", function() {
     // Fetch friends list
     timeout(fetch(
         "/api/v1/get_friend_list", {method: "post"}
-    ), 10000).then((response) => response.json()).then(friendDataFetched)//.catch(apiTimeout)
+    ), 10000).then((response) => {
+        if(response.status == 200)
+        {
+            friendDataFetched(response.json())
+        }
+        else
+        {
+            response.text().then(apiError)
+        }
+    })
 
     search_box = document.getElementById("user-search");
     search_box.addEventListener("keyup", function(event) {
@@ -320,6 +329,12 @@ function apiError(error)
 function friendDataFetched(data)
 {
     data = Object.values(data);
+
+    if(data.length == 0)
+    {
+        displayError("Your Friend List is empty! You need at least one user to compare games with to use WhatCanWePlay!")
+        return;
+    }
 
     data.sort(
         (a, b) => {
