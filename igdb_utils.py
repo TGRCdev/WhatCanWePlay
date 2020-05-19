@@ -102,7 +102,14 @@ def get_steam_game_info(webkey: str, appids: Collection[int], connect_timeout: O
     
     appid_set = set(appids)
     
-    cached_games = get_cached_games(appid_set)
+    cache_error = False
+
+    try:
+        cached_games = get_cached_games(appid_set)
+    except Exception as e:
+        print("An exception occurred while retrieving cached games: " + str(e))
+        cached_games = {}
+        cache_error = True
 
     if len(cached_games) == len(appid_set):
         return {"errcode": 0, "games": cached_games}
@@ -172,7 +179,11 @@ def get_steam_game_info(webkey: str, appids: Collection[int], connect_timeout: O
     for id in games_dict.keys():
         cached_games[id] = games_dict[id]
     
-    update_cached_games(games_dict)
+    if not cache_error:
+        try:
+            update_cached_games(games_dict)
+        except Exception as e:
+            print("An exception occurred while updating cached games: " + str(e))
 
     return {
         "errcode": 0,
