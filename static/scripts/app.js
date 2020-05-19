@@ -81,13 +81,13 @@ window.addEventListener("load", function() {
     ), 10000).then((response) => {
         if(response.status == 200)
         {
-            friendDataFetched(response.json())
+            response.json().then(friendDataFetched)
         }
         else
         {
             response.text().then(apiError)
         }
-    })
+    }).catch(apiError)
 
     search_box = document.getElementById("user-search");
     search_box.addEventListener("keyup", function(event) {
@@ -332,7 +332,7 @@ function friendDataFetched(data)
 
     if(data.length == 0)
     {
-        displayError("Your Friend List is empty! You need at least one user to compare games with to use WhatCanWePlay!")
+        displayError("Your Friend List is empty! You need at least one friend to compare games with!")
         return;
     }
 
