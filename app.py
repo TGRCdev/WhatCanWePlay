@@ -223,13 +223,13 @@ def get_friend_list_v1():
     if errcode == 1:
         return ("Site has bad Steam API key. Please contact us about this error at " + contact_email, 500)
     elif errcode == 2:
-        return ("Steam took too long to respond", 500)
+        return ("Steam took too long to respond. Please try again later.", 500)
     elif errcode == 3:
-        return ("Steam took too long to transmit info", 500)
+        return ("Steam took too long to transmit info. Please try again later.", 500)
     elif errcode == 4:
-        return ("Your Friend List is not publicly accessible, and cannot be retrieved by WhatCanWePlay", 500)
+        return ("Your Friend List is not publicly accessible, and cannot be retrieved by WhatCanWePlay. Please set your Friend list visibility to Public and refresh the page.", 500)
     elif errcode == -1:
-        return ("An unknown error occurred", 500)
+        return ("An unknown error occurred. Please try again later.", 500)
     
     friends_info = get_steam_user_info(steam_key, friends_info["friends"], connect_timeout, read_timeout)
 
@@ -237,11 +237,11 @@ def get_friend_list_v1():
     if errcode == 1:
         return ("Site has bad Steam API key. Please contact us about this error at " + contact_email, 500)
     elif errcode == 2:
-        return ("Steam took too long to respond", 500)
+        return ("Steam took too long to respond. Please try again later.", 500)
     elif errcode == 3:
-        return ("Steam took too long to transmit info", 500)
+        return ("Steam took too long to transmit info. Please try again later.", 500)
     elif errcode == -1:
-        return ("An unknown error occurred", 500)
+        return ("An unknown error occurred. Please try again later.", 500)
     
     for user in friends_info["users"].values():
         if "steam_id" in user.keys():
@@ -372,17 +372,17 @@ def intersect_owned_games_v1():
         )
     elif errcode == 2:
         return (
-            json.dumps({"message": "IGDB took too long to respond. Try again later.", "errcode": -1}),
+            json.dumps({"message": "IGDB took too long to respond. Please try again later.", "errcode": -1}),
             500
         )
     elif errcode == 3:
         return (
-            json.dumps({"message": "IGDB took too long to transmit info. Try again later.", "errcode": -1}),
+            json.dumps({"message": "IGDB took too long to transmit info. Please try again later.", "errcode": -1}),
             500
         )
     elif errcode == -1:
         return (
-            json.dumps({"message": "An unknown error occurred. Try again later.", "errcode": -1}),
+            json.dumps({"message": "An unknown error occurred. Please try again later.", "errcode": -1}),
             500
         )
 
