@@ -27,19 +27,7 @@ config = json.load(open("config.json", "r"))
 debug = config.get("debug", config.get("DEBUG", False))
 db_filename = config.get("igdb-cache-filename", "igdb-cache.sqlite")
 
-info_age_dict = config.get("igdb-cache-info-age", {})
-info_age = timedelta(**info_age_dict).total_seconds()
-
-def get_cached_games(appids: Collection[int]) -> Dict[int, Dict[str, Any]]:
-    query = """
-    SELECT steam_id, igdb_id, name, cover_id, has_multiplayer, supported_players
-    FROM game_info
-    WHERE time_cached < ? AND steam_id in ({})
-    """.format(",".join(
-        ["?" for _ in range(len(appids))]
-    ))
-    db_handle = sqlite3.connect(db_filename)
-    db_handle.execute("""
+create_db_query = """
     CREATE TABLE IF NOT EXISTS game_info (
         steam_id INTEGER PRIMARY KEY,
         igdb_id INTEGER,
@@ -49,7 +37,22 @@ def get_cached_games(appids: Collection[int]) -> Dict[int, Dict[str, Any]]:
         supported_players TEXT,
         time_cached REAL
     );
-    """)
+"""
+
+info_age_dict = config.get("igdb-cache-info-age", {})
+info_age = timedelta(**info_age_dict).total_seconds()
+
+def get_cached_games(appids: Collection[int]) -> Dict[int, Dict[str, Any]]:
+    query = """
+    SELECT steam_id, igdb_id, name, cover_id, has_multiplayer, supported_players
+    FROM game_info
+    WHERE time_cached > ? AND steam_id in ({})
+    """.format(",".join(
+        ["?" for _ in range(len(appids))]
+    ))
+    db_handle = sqlite3.connect(db_filename)
+    db_handle.execute(create_db_query)
+
     cursor = db_handle.cursor()
     cursor.execute(query, [datetime.now(timezone.utc).timestamp() - info_age, *list(appids)])
     results = cursor.fetchall()
@@ -72,18 +75,9 @@ def update_cached_games(game_info: Mapping[int, Mapping[str, Any]]):
     VALUES (?,?,?,?,?,?,?)
     """
     db_handle = sqlite3.connect(db_filename)
-    db_handle.execute("""
-    CREATE TABLE IF NOT EXISTS game_info (
-        steam_id INTEGER PRIMARY KEY,
-        igdb_id INTEGER,
-        name TEXT,
-        cover_id TEXT,
-        has_multiplayer BOOL,
-        supported_players TEXT,
-        time_cached REAL
-    );
-    """)
+    db_handle.execute(create_db_query)
     cursor = db_handle.cursor()
+    now = datetime.now(timezone.utc).timestamp()
     cursor.execute("BEGIN TRANSACTION")
     cursor.executemany(query, [[
         game.get("steam_id"),
@@ -92,7 +86,7 @@ def update_cached_games(game_info: Mapping[int, Mapping[str, Any]]):
         game.get("cover_id"),
         game.get("has_multiplayer"),
         game.get("supported_players"),
-        datetime.now(timezone.utc).second] for game in game_info.values()]
+        now] for game in game_info.values()]
     )
     cursor.execute("END TRANSACTION")
 
