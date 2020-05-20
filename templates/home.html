@@ -1,5 +1,99 @@
+{#
+    This file is a part of WhatCanWePlay
+    Copyright (C) 2020 TGRCDev
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#}
+
+{% extends "base_page.html" %}
+
+{% block title %}What Can We Play?{% endblock %}
+{% block title_postfix %}{% endblock %}
+
+{% block meta %}
+{{ super() }}
+{% endblock %}
+
+{% block styles %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='styles/app.css') }}"/>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
 {% if steam_info %}
-{% include "app.html" %}
-{% else %}
-{% include "not_signed_in.html" %}
+<script src="{{ url_for('static', filename='scripts/fetch_timeout.js') }}"></script>
+<script src="{{ url_for('static', filename='scripts/app.js') }}"></script>
 {% endif %}
+{% endblock %}
+
+{% block content %}
+<div id="app" class="on-users">
+    <div id="users">
+        <div id="main-user" class="user list-item {% if not steam_info %}not-signed-in-hide{% endif %}"
+        {% if steam_info %}
+        data-visibility="{{ steam_info.visibility }}"
+        {% endif %}>
+            <img class="user-img{% if not steam_info %} offline{% endif %}" src="{% if steam_info %}{{ steam_info.avatar }}{% else %}{{ url_for('static', filename='images/default_avatar.png') }}{% endif %}"/>
+            <div class="user-name">
+                {% if steam_info %}
+                <div>{{ steam_info.screen_name }}</div>
+                <a style="display:block" href="/steam_logout">Sign out</a>
+                {% else %}
+                <em>Not signed in</em>
+                {% endif %}
+            </div>
+            <button class="user-checkbox" {% if steam_info %}data-steam-id="{{ steam_info.steam_id }}" onclick="userCheckboxClicked(this)"{% else %}disabled{% endif %}>
+                <div class="user-checkbox-fill" style="display:none;"></div>
+            </button>
+        </div>
+        <input type="text" {% if not steam_info %}class="not-signed-in-hide"{% endif %} id="user-search" placeholder="Search by name" {% if not steam_info %}disabled{% endif %} />
+        <div id="friends" data-default-avatar="{{ url_for('static', filename='images/default_avatar.png') }}">
+            {% if not steam_info %}
+            <div id="not-signed-in">
+                To start using WhatCanWePlay, you must sign in by clicking the button below.
+                <form action="steam_login" method="POST">
+                    <input id="user-box" type="image" src="static/images/sits.png" alt="Sign in through Steam" />
+                </form>
+                <em>By signing in with Steam, you agree that you have read our <a href="privacy">Privacy Policy</a>.</em>
+            </div>
+            {% endif %}
+        </div>
+        <div id="users-cover" style="display:none;"></div>
+    </div>
+    <div id="submit">
+        <button class="slide-button{% if not steam_info %} not-signed-in-hide{% endif %}" id="submit-button" disabled>Find Games</button>
+    </div>
+    <div id="back">
+        <button class="slide-button" id="back-button">Go Back</button>
+    </div>
+    <div id="games">
+        {% if steam_info %}
+        <div id="error-div" style="display:none;">
+            <h1 id="oh-no">Oh No</h1>
+            <div id="error-info">An unknown error occurred. Please try again later.</div>
+        </div>
+        <div id="game-template" class="game list-item">
+            <img src="{{ url_for('static', filename='images/default_cover.jpg') }}" class="game-cover" />
+            <div class="game-title"></div>
+            <div class="user-count">
+                <span class="supports">Supports</span>
+                <img class="users-icon" src="{{ url_for('static', filename='images/users-icon.svg') }}" alt="User Count" />
+                <span class="user-number">?</span>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

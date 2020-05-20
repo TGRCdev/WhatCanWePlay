@@ -1,3 +1,21 @@
+/*
+    This file is a part of WhatCanWePlay
+    Copyright (C) 2020 TGRCDev
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 var friends;
 var user_template;
 var game_template;
@@ -63,7 +81,7 @@ window.addEventListener("load", function() {
             if(vis != "3")
             {
                 delete child.dataset.steamId;
-                child.classList.add("inactive");
+                child.disabled = true;
                 child.title = "Your Steam profile visibility is set to "
                 + (vis == 1 ? "Private" : "Friends Only")
                 + ", and cannot be retrieved by this app.";
@@ -396,7 +414,7 @@ function friendDataFetched(data)
                         child.title = "This user's Steam profile visibility is set to "
                         + (user["visibility"] == 1 ? "Private" : "Friends Only")
                         + ", and cannot be retrieved by this app.";
-                        child.classList.add("inactive");
+                        child.disabled = true;
                     }
                     else
                     {
