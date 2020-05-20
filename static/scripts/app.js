@@ -348,6 +348,20 @@ function friendDataFetched(data)
 {
     data = Object.values(data);
 
+    data = data.filter(function(user) {
+        if(
+            !user["exists"] ||
+            !user["screen_name"] ||
+            !user["avatar"]
+        )
+        {
+            console.error("user with steam id " + String(user["steam_id"]) + " is missing info. dropping from list")
+            return false;
+        }
+
+        return true;
+    })
+
     if(data.length == 0)
     {
         displayError("Your Friend List is empty! You need at least one friend to compare games with!")
