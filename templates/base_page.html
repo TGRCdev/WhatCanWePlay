@@ -21,6 +21,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         {% block head %}
         {% block meta %}
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="A web app for finding Steam games you and your friends already own.">
+        <meta name="author" content="TGRCDev">
         {% endblock %}
 
         <title>
@@ -40,7 +42,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         {% endblock %}
         <script>
             window.addEventListener("load",function() {
-                //this.document.getElementById("js-alert-container").remove()
                 var contact = this.document.getElementById("contact-link")
                 var mailto = ":otliam"
                 var user = "{{ contact_email_user_reversed }}"

@@ -168,6 +168,7 @@ def steam_login():
         return redirect(auth_url)
     
     response = redirect(url_for("index"))
+    response.headers["X-Robots-Tag"] = "none"
 
     if validate_steam_identity(dict(request.args)):
         steam_id = int(request.args["openid.identity"].rsplit("/")[-1])
@@ -178,6 +179,7 @@ def steam_login():
 @app.route("/steam_logout")
 def steam_logout():
     response = redirect(url_for("index"))
+    response.headers["X-Robots-Tag"] = "none"
     response.set_cookie("steam_info", "", secure=True)
     return response
 
@@ -246,6 +248,7 @@ def get_friend_list_v1():
     for user in friends_info["users"].values():
         if "steam_id" in user.keys():
             user["steam_id"] = str(user["steam_id"])
+            user["exists"] = True
 
     return jsonify(friends_info["users"])
 
