@@ -277,7 +277,7 @@ def intersect_owned_games_v1():
     if "steam_id" not in steam_info.keys():
         return (
             json.dumps({"message": "Not signed in to Steam. Please refresh the page and try again.", "errcode": -1}),
-            403
+            200
         )
     
     body = request.get_json(force=True, silent=True)
@@ -285,13 +285,13 @@ def intersect_owned_games_v1():
     if not isinstance(body, dict):
         return (
             json.dumps({"message": "Received a bad request. Please refresh the page and try again.", "errcode": -1}),
-            400
+            200
         )
 
     if not body or "steamids" not in body.keys():
         return (
             json.dumps({"message": "Received a bad request. Please refresh the page and try again.", "errcode": -1}),
-            400
+            200
         )
     
     try:
@@ -299,19 +299,19 @@ def intersect_owned_games_v1():
     except (ValueError, TypeError):
         return (
             json.dumps({"message": "Received a bad request. Please refresh the page and try again.", "errcode": -1}),
-            400
+            200
         )
     
     if len(steamids) < 2:
         return (
             json.dumps({"message": "Must have at least 2 users to intersect games.", "errcode": -1}),
-            400
+            200
         )
     
     if len(steamids) > 10:
         return (
             json.dumps({"message": "Games intersection is capped at 10 users.", "errcode": -1}),
-            400
+            200
         )
     
     free_games = bool(body.get("include_free_games", False))
@@ -325,34 +325,34 @@ def intersect_owned_games_v1():
         if errcode == 1:
             return (
                 json.dumps({"message": "Site has bad Steam API key. Please contact us about this error at {}.".format(contact_email), "errcode": -1}),
-                500
+                200
             )
         elif errcode == 2:
             return (
                 json.dumps({"message": "Steam took too long to respond. Please try again later.", "errcode": -1}),
-                500
+                200
             )
         elif errcode == 3:
             return (
                 json.dumps({"message": "Steam took too long to transmit info. Please try again later.", "errcode": -1}),
-                500
+                200
             )
         elif errcode == 4:
             return (
                 json.dumps({"user": str(steamid), "errcode": 1}),
-                400
+                200
             )
         elif errcode == -1:
             return (
                 json.dumps({"message": "An unknown error occurred. Please try again later.", "errcode": -1}),
-                500
+                200
             )
         
         games = user_owned_games.get("games")
         if len(games) == 0:
             return (
                 json.dumps({"user": str(steamid), "errcode": 2}),
-                400
+                200
             )
         
         if not all_own:
@@ -371,22 +371,22 @@ def intersect_owned_games_v1():
     if errcode == 1:
         return (
             json.dumps({"message": "Site has bad IGDB API key. Please contact us about this error at {}.".format(contact_email), "errcode": -1}),
-            500
+            200
         )
     elif errcode == 2:
         return (
             json.dumps({"message": "IGDB took too long to respond. Please try again later.", "errcode": -1}),
-            500
+            200
         )
     elif errcode == 3:
         return (
             json.dumps({"message": "IGDB took too long to transmit info. Please try again later.", "errcode": -1}),
-            500
+            200
         )
     elif errcode == -1:
         return (
             json.dumps({"message": "An unknown error occurred. Please try again later.", "errcode": -1}),
-            500
+            200
         )
 
     return jsonify({
