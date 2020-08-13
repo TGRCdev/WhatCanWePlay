@@ -139,9 +139,14 @@ def get_steam_game_info(webkey: str, appids: Collection[int], connect_timeout: O
             return {"errcode": -1}
         
         for game in r.json():
-            steam_id = int(game["uid"])
+            steam_id = game.get("uid", None)
+            if not steam_id:
+                continue
+            steam_id = int(steam_id)
+            game = game.get("game", None)
+            if not game:
+                continue
             uncached_ids.discard(steam_id)
-            game = game["game"]
 
             game_modes = game.get("game_modes", [])
 
