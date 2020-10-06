@@ -3,3 +3,4 @@ config.json
 venv*
 .vscode
 igdb-cache.sqlite
+bearer-token.json

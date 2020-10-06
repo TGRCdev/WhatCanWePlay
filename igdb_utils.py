@@ -20,8 +20,9 @@ import sqlite3
 from requests.exceptions import ConnectTimeout, ReadTimeout
 from typing import Dict, Collection, Any, Mapping, Optional
 from datetime import timedelta, datetime, timezone
+import os.path
 
-api_base = "https://api-v3.igdb.com/"
+api_base = "https://api.igdb.com/v4/"
 
 config = json.load(open("config.json", "r"))
 debug = config.get("debug", config.get("DEBUG", False))
@@ -41,6 +42,56 @@ create_db_query = """
 
 info_age_dict = config.get("igdb-cache-info-age", {})
 info_age = timedelta(**info_age_dict).total_seconds()
+
+def fetch_and_store_token() -> str:
+    r = requests.post(
+        "https://id.twitch.tv/oauth2/token",
+        json={
+            "client_id": config["igdb-client-id"],
+            "client_secret": config["igdb-secret"],
+            "grant_type": "client_credentials"
+        }
+    )
+
+    if debug:
+        r.raise_for_status()
+    
+    try:
+        token = r.json()
+        token_dict = {
+            "token": token["access_token"],
+            "expire-time": datetime.now(timezone.utc).timestamp() + token["expires_in"],
+            "token_type": token["token_type"]
+        }
+        token_file = open("bearer-token.json", "w")
+        json.dump(token_dict, token_file)
+        token_file.close()
+        return token["access_token"]
+    except Exception as e:
+        print("Exception thrown while parsing token return")
+        print(e)
+        return ""
+
+def get_or_refresh_token() -> str:
+    try:
+        if os.path.exists("bearer-token.json"):
+            token_file = open("bearer-token.json")
+            token = json.load(token_file)
+            token_file.close()
+            if datetime.now(timezone.utc).timestamp() >= token.get("expire-time", 0):
+                return fetch_and_store_token()
+            else:
+                return token.get("token", "")
+        else:
+            return fetch_and_store_token()
+    except json.JSONDecodeError as e:
+        print("Failed to decode token JSON.")
+        print(e)
+        return ""
+    except Exception as e:
+        print("Failed to fetch bearer token.")
+        print(e)
+        return ""
 
 def get_cached_games(appids: Collection[int]) -> Dict[int, Dict[str, Any]]:
     query = """
@@ -111,6 +162,10 @@ def get_steam_game_info(webkey: str, appids: Collection[int], connect_timeout: O
     uncached_ids = appid_set - set(cached_games.keys())
     uncached_ids_list = list(uncached_ids)
 
+    token = get_or_refresh_token()
+    if not token:
+        return {"errcode": 4}
+
     games_dict = {}
     retrieved_games = 0
     while retrieved_games < len(uncached_ids_list):
@@ -123,7 +178,9 @@ def get_steam_game_info(webkey: str, appids: Collection[int], connect_timeout: O
                 api_base + "external_games",
                 data = "fields uid,game.name,game.game_modes,game.multiplayer_modes.onlinemax,game.multiplayer_modes.onlinecoopmax,game.cover.image_id; where uid = ({}) & category = 1; limit {};".format(",".join(map(str, game_slice)), len(game_slice)),
                 headers = {
-                    "user-key": webkey, "Accept": "application/json"
+                    "Client-ID": webkey,
+                    "Authorization": "Bearer " + token,
+                    "Accept": "application/json"
                 },
                 timeout = (connect_timeout, read_timeout)
             )

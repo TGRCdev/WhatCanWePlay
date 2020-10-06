@@ -29,7 +29,7 @@ from itsdangerous import URLSafeSerializer
 # Load config
 config = json.load(open("config.json", "r"))
 steam_key = config["steam-key"]
-igdb_key = config["igdb-key"]
+igdb_key = config["igdb-client-id"]
 debug = config.get("debug", config.get("DEBUG", False))
 enable_api_tests = config.get("enable-api-tests", debug)
 cookie_max_age_dict = config.get("cookie-max-age", {})
@@ -382,6 +382,10 @@ def intersect_owned_games_v1():
         return (
             json.dumps({"message": "IGDB took too long to transmit info. Please try again later.", "errcode": -1}),
             200
+        )
+    elif errcode == 4:
+        return (
+            json.dumps({"message": "WhatCanWePlay failed to acquire an IGDB token. Please contact us about this error at {}.".format(contact_email), "errcode": -1})
         )
     elif errcode == -1:
         return (
