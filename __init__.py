@@ -25,10 +25,12 @@ from requests import HTTPError
 import secrets
 from datetime import timezone, datetime, timedelta
 from itsdangerous import URLSafeSerializer
+from os import path
 
 # Load config
 def create_app():
-    config = json.load(open("config.json", "r"))
+    root_path = path.dirname(__file__)
+    config = json.load(open(path.join(root_path, "config.json"), "r"))
     steam_key = config["steam-key"]
     igdb_key = config["igdb-client-id"]
     debug = config.get("debug", config.get("DEBUG", False))

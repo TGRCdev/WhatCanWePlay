@@ -18,10 +18,12 @@ import requests
 from requests.exceptions import ConnectTimeout, ReadTimeout
 from typing import Mapping, Any, Collection, Dict, List, Optional
 import json
+from os import path
 
 api_base = "https://api.steampowered.com/"
 
-config = json.load(open("config.json", "r"))
+root_path = path.dirname(__file__)
+config = json.load(open(path.join(root_path, "config.json"), "r"))
 debug = config.get("debug", config.get("DEBUG", False))
 
 # Fetches public information about a list of Steam users

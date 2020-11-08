@@ -20,13 +20,16 @@ import sqlite3
 from requests.exceptions import ConnectTimeout, ReadTimeout
 from typing import Dict, Collection, Any, Mapping, Optional
 from datetime import timedelta, datetime, timezone
-import os.path
+from os import path
 
 api_base = "https://api.igdb.com/v4/"
 
-config = json.load(open("config.json", "r"))
+root_path = path.dirname(__file__)
+config = json.load(open(path.join(root_path, "config.json"), "r"))
 debug = config.get("debug", config.get("DEBUG", False))
 db_filename = config.get("igdb-cache-filename", "igdb-cache.sqlite")
+if not path.isabs(db_filename):
+    db_filename = path.join(root_path, db_filename)
 
 create_db_query = """
     CREATE TABLE IF NOT EXISTS game_info (
@@ -63,7 +66,7 @@ def fetch_and_store_token() -> str:
             "expire-time": datetime.now(timezone.utc).timestamp() + token["expires_in"],
             "token_type": token["token_type"]
         }
-        token_file = open("bearer-token.json", "w")
+        token_file = open(path.join(root_path, "bearer-token.json"), "w")
         json.dump(token_dict, token_file)
         token_file.close()
         return token["access_token"]
@@ -74,8 +77,9 @@ def fetch_and_store_token() -> str:
 
 def get_or_refresh_token() -> str:
     try:
-        if os.path.exists("bearer-token.json"):
-            token_file = open("bearer-token.json")
+        token_path = path.join(root_path, "bearer-token.json")
+        if path.exists(token_path):
+            token_file = open(token_path)
             token = json.load(token_file)
             token_file.close()
             if datetime.now(timezone.utc).timestamp() >= token.get("expire-time", 0):
