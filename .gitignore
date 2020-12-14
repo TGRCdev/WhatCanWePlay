@@ -4,3 +4,7 @@ venv*
 .vscode
 igdb-cache.sqlite
 bearer-token.json
+lib/wcwp_rust/target
+lib/wcwp_rust/Cargo.lock
+lib/whatcanweplay.pyd
+lib/bin

@@ -14,18 +14,37 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+try:
+    from .lib.bin import whatcanweplay as wcwp
+except:
+    import shutil, platform, os
+    system = platform.system()
+    try:
+        os.makedirs("lib/bin", exist_ok=True)
+        if system == "Windows":
+            shutil.copyfile("lib/wcwp_rust/target/release/whatcanweplay.dll", "lib/bin/whatcanweplay.pyd")
+        else:
+            shutil.copyfile("lib/wcwp_rust/target/release/libwhatcanweplay.so", "lib/bin/whatcanweplay.so")
+        from .lib.bin import whatcanweplay as wcwp
+    except Exception as e:
+        print("Failed to load WhatCanWePlay rust library. Please go to \"lib/wcwp_rust\" and run \"cargo build --release\"")
+        print(e)
+        exit(1)
+print("WhatCanWePlay rust lib loaded (" + str(wcwp.__file__) + ")")
+
 from flask import Flask, request, jsonify, Response, render_template, redirect, session, url_for, make_response
 import requests
 from urllib import parse
 from werkzeug.exceptions import BadRequest
 import json
-from .steam_utils import get_steam_user_info, get_steam_user_friend_list, get_owned_steam_games
-from .igdb_utils import get_steam_game_info
+#from .steam_utils import get_steam_user_info, get_steam_user_friend_list, get_owned_steam_games
+#from .igdb_utils import get_steam_game_info
 from requests import HTTPError
 import secrets
 from datetime import timezone, datetime, timedelta
 from itsdangerous import URLSafeSerializer
 from os import path
+import traceback
 
 # Load config
 def create_app():
@@ -33,6 +52,7 @@ def create_app():
     config = json.load(open(path.join(root_path, "config.json"), "r"))
     steam_key = config["steam-key"]
     igdb_key = config["igdb-client-id"]
+    igdb_secret = config["igdb-secret"]
     debug = config.get("debug", config.get("DEBUG", False))
     enable_api_tests = config.get("enable-api-tests", debug)
     cookie_max_age_dict = config.get("cookie-max-age", {})
@@ -115,14 +135,17 @@ def create_app():
         if steamid <= 0:
             response.set_cookie("steam_info", "", secure=True)
             return {}
-
-        info = get_steam_user_info(steam_key, [steamid], connect_timeout, read_timeout)
-
-        if info["errcode"] != 0 or not info["users"].get(steamid, {}).get("exists", False):
+        
+        info = {}
+        try:
+            info = wcwp.steam.get_steam_users_info(steam_key, [steamid])[0]
+        except wcwp.steam.BadWebkeyException:
             response.set_cookie("steam_info", "", secure=True)
             return {}
-        
-        info = info["users"][steamid]
+        except IndexError:
+            response.set_cookie("steam_info", "", secure=True)
+            return {}
+
         if info_max_age:
             info["expires"] = (datetime.now(timezone.utc) + timedelta(seconds=info_max_age)).timestamp()
         ser = URLSafeSerializer(app.secret_key)
@@ -216,44 +239,55 @@ def create_app():
         if "steam_id" not in steam_info.keys():
             return ("Not signed in to Steam", 403)
         
-        friends_info = get_steam_user_friend_list(
-            steam_key,
-            steam_info["steam_id"],
-            connect_timeout,
-            read_timeout
-        )
+        try:
+            friends_info = wcwp.steam.get_friend_list(
+                steam_key,
+                steam_info["steam_id"]
+            )
+            
+            for user in friends_info:
+                if "steam_id" in user.keys():
+                    user["steam_id"] = str(user["steam_id"])
+                    user["exists"] = True
 
-        errcode = friends_info.pop("errcode")
-
-        if errcode == 1:
+            return jsonify(friends_info)
+        except wcwp.steam.BadWebkeyException:
             return ("Site has bad Steam API key. Please contact us about this error at " + contact_email, 500)
-        elif errcode == 2:
-            return ("Steam took too long to respond. Please try again later.", 500)
-        elif errcode == 3:
-            return ("Steam took too long to transmit info. Please try again later.", 500)
-        elif errcode == 4:
-            return ("Your Friend List is not publicly accessible, and cannot be retrieved by WhatCanWePlay. Please set your Friend list visibility to Public and refresh the page.", 500)
-        elif errcode == -1:
+        except wcwp.steam.SteamException as e:
+            print(e)
             return ("An unknown error occurred. Please try again later.", 500)
-        
-        friends_info = get_steam_user_info(steam_key, friends_info["friends"], connect_timeout, read_timeout)
-
-        errcode = friends_info.pop("errcode")
-        if errcode == 1:
-            return ("Site has bad Steam API key. Please contact us about this error at " + contact_email, 500)
-        elif errcode == 2:
-            return ("Steam took too long to respond. Please try again later.", 500)
-        elif errcode == 3:
-            return ("Steam took too long to transmit info. Please try again later.", 500)
-        elif errcode == -1:
+        except Exception as e:
+            print(traceback.format_exc())
             return ("An unknown error occurred. Please try again later.", 500)
-        
-        for user in friends_info["users"].values():
-            if "steam_id" in user.keys():
-                user["steam_id"] = str(user["steam_id"])
-                user["exists"] = True
 
-        return jsonify(friends_info["users"])
+    def refresh_igdb_token():
+        try:
+            token_path = path.join(root_path, "bearer-token.json")
+            token = wcwp.igdb.fetch_twitch_token(igdb_key, igdb_secret)
+            token["expiry"] = datetime.now(timezone.utc).timestamp() + token.get("expires_in", 0)
+            token.pop("expires_in")
+            json.dump(token, open(token_path, "w"))
+            return token.get("access_token", "")
+        except Exception:
+            traceback.print_exc()
+            return ""
+
+    def get_igdb_token():
+        try:
+            token_path = path.join(root_path, "bearer-token.json")
+            if path.exists(token_path):
+                token_file = open(token_path)
+                token = json.load(token_file)
+                token_file.close()
+                if datetime.now(timezone.utc).timestamp() >= token.get("expiry", 0):
+                    return refresh_igdb_token()
+                else:
+                    return token.get("access_token", "")
+            else:
+                return refresh_igdb_token()
+        except Exception:
+            traceback.print_exc()
+            return ""
 
     # Errcodes
     # -1: An error occurred with a message. Additional fields: "message"
@@ -316,90 +350,21 @@ def create_app():
                 json.dumps({"message": "Games intersection is capped at 10 users.", "errcode": -1}),
                 200
             )
-        
-        free_games = bool(body.get("include_free_games", False))
 
-        all_own = None
+        try:
+            token = get_igdb_token()
+            game_info = wcwp.intersect_owned_games(steam_key, igdb_key, token, list(steamids))
 
-        for steamid in steamids:
-            user_owned_games = get_owned_steam_games(steam_key, steamid, free_games, connect_timeout, read_timeout)
-            errcode = user_owned_games["errcode"]
-
-            if errcode == 1:
-                return (
-                    json.dumps({"message": "Site has bad Steam API key. Please contact us about this error at {}.".format(contact_email), "errcode": -1}),
-                    200
-                )
-            elif errcode == 2:
-                return (
-                    json.dumps({"message": "Steam took too long to respond. Please try again later.", "errcode": -1}),
-                    200
-                )
-            elif errcode == 3:
-                return (
-                    json.dumps({"message": "Steam took too long to transmit info. Please try again later.", "errcode": -1}),
-                    200
-                )
-            elif errcode == 4:
-                return (
-                    json.dumps({"user": str(steamid), "errcode": 1}),
-                    200
-                )
-            elif errcode == -1:
-                return (
-                    json.dumps({"message": "An unknown error occurred. Please try again later.", "errcode": -1}),
-                    200
-                )
-            
-            games = user_owned_games.get("games")
-            if len(games) == 0:
-                return (
-                    json.dumps({"user": str(steamid), "errcode": 2}),
-                    200
-                )
-            
-            if not all_own:
-                all_own = set(games)
-            else:
-                all_own = all_own & set(games)
-            
-            if len(all_own) == 0:
-                break
-        
-        # Step two: Fetch the game info
-        game_info = get_steam_game_info(igdb_key, all_own, connect_timeout, read_timeout)
-
-        errcode = game_info["errcode"]
-
-        if errcode == 1:
+            return jsonify({
+                "message": "Intersected successfully",
+                "games": list(game_info),
+                "errcode": 0
+            })
+        except Exception:
+            traceback.print_exc()
             return (
-                json.dumps({"message": "Site has bad IGDB API key. Please contact us about this error at {}.".format(contact_email), "errcode": -1}),
-                200
+                json.dumps({"message": "An unknown error has occurred", "errcode": -1}),
+                500
             )
-        elif errcode == 2:
-            return (
-                json.dumps({"message": "IGDB took too long to respond. Please try again later.", "errcode": -1}),
-                200
-            )
-        elif errcode == 3:
-            return (
-                json.dumps({"message": "IGDB took too long to transmit info. Please try again later.", "errcode": -1}),
-                200
-            )
-        elif errcode == 4:
-            return (
-                json.dumps({"message": "WhatCanWePlay failed to acquire an IGDB token. Please contact us about this error at {}.".format(contact_email), "errcode": -1})
-            )
-        elif errcode == -1:
-            return (
-                json.dumps({"message": "An unknown error occurred. Please try again later.", "errcode": -1}),
-                200
-            )
-
-        return jsonify({
-            "message": "Intersected successfully",
-            "games": list(game_info.get("games", {}).values()),
-            "errcode": 0
-        })
 
     return app
