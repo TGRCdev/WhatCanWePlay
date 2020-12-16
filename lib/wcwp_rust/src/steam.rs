@@ -257,3 +257,25 @@ pub fn get_friend_list(webkey: &str, steamid: u64) -> Result<Vec<SteamUser>, Ste
 
     return Ok(friends_info);
 }
+
+pub fn intersect_owned_game_ids(webkey: &str, steamids: &[u64])-> Result<HashSet<u64>, SteamError>
+{
+    if steamids.is_empty()
+    {
+        return Ok(HashSet::new());
+    }
+
+    let mut games_set = get_owned_steam_games(webkey, steamids[0])?;
+
+    for &id in steamids[1..].iter() {
+        let next_set = get_owned_steam_games(webkey, id)?;
+        games_set = &games_set & &next_set; // Intersect the two sets
+
+        if games_set.is_empty()
+        { // No common owned games
+            return Ok(HashSet::new());
+        }
+    }
+
+    return Ok(games_set);
+}

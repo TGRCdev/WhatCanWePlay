@@ -15,21 +15,34 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 try:
-    from .lib.bin import whatcanweplay as wcwp
-except:
     import shutil, platform, os
-    system = platform.system()
-    try:
+    source = ""
+    dest = ""
+    if platform.system() == "Windows":
+        source = "lib/wcwp_rust/target/release/whatcanweplay.dll"
+        dest = "lib/bin/whatcanweplay.pyd"
+    else:
+        source = "lib/wcwp_rust/target/release/libwhatcanweplay.so"
+        dest = "lib/bin/whatcanweplay.so"
+
+    if not os.path.exists(dest):
         os.makedirs("lib/bin", exist_ok=True)
-        if system == "Windows":
-            shutil.copyfile("lib/wcwp_rust/target/release/whatcanweplay.dll", "lib/bin/whatcanweplay.pyd")
-        else:
-            shutil.copyfile("lib/wcwp_rust/target/release/libwhatcanweplay.so", "lib/bin/whatcanweplay.so")
-        from .lib.bin import whatcanweplay as wcwp
-    except Exception as e:
-        print("Failed to load WhatCanWePlay rust library. Please go to \"lib/wcwp_rust\" and run \"cargo build --release\"")
-        print(e)
-        exit(1)
+        shutil.copyfile(source, dest)
+    else:
+        source_time = os.path.getmtime(source)
+        dest_time = os.path.getmtime(dest)
+        try:
+            if dest_time < source_time:
+                print("Updating WhatCanWePlay rust library with newer library file...")
+                shutil.copyfile(source, dest)
+        except Exception:
+            print("Failed to update WhatCanWePlay rust library. It will be re-attempted when next launched.")
+    
+    from .lib.bin import whatcanweplay as wcwp
+except Exception as e:
+    print("Failed to load WhatCanWePlay rust library. Please go to \"lib/wcwp_rust\" and run \"cargo build --release\"")
+    print(e)
+    raise e
 print("WhatCanWePlay rust lib loaded (" + str(wcwp.__file__) + ")")
 
 from flask import Flask, request, jsonify, Response, render_template, redirect, session, url_for, make_response
@@ -56,7 +69,7 @@ def create_app():
     debug = config.get("debug", config.get("DEBUG", False))
     enable_api_tests = config.get("enable-api-tests", debug)
     cookie_max_age_dict = config.get("cookie-max-age", {})
-    info_max_age_dict = config.get("info-max-age", {})
+    cache_max_age_dict = config.get("igdb-cache-max-age", config.get("igdb-cache-info-age", {}))
     source_url = config.get("source-url", "")
     contact_email = config["contact-email"]
     privacy_email = config.get("privacy-email", contact_email)
@@ -67,6 +80,7 @@ def create_app():
     read_timeout = config.get("read-timeout", 0.0)
     if read_timeout <= 0.0:
         read_timeout = None
+    cache_file = config.get("igdb-cache-file")
 
     # Create uWSGI callable
     app = Flask(__name__)
@@ -88,10 +102,14 @@ def create_app():
     cookie_max_age = timedelta(**cookie_max_age_dict).total_seconds()
     if cookie_max_age == 0:
         cookie_max_age = None
-    info_max_age = timedelta(**info_max_age_dict).total_seconds()
+    
+    # Setup cache info max age
+    cache_max_age = 0.0
+    if cache_file:
+        cache_max_age = timedelta(**cache_max_age_dict).total_seconds()
 
-    print("cookies set to expire after {} seconds".format(cookie_max_age))
-    print("steam info set to refresh after {} seconds".format(info_max_age))
+    print("cookies set to expire after %f seconds" % cookie_max_age)
+    print("cache set to expire after %f seconds" % cache_max_age)
 
     def basic_info_dict():
         email_rev = contact_email.split("@")
@@ -146,8 +164,6 @@ def create_app():
             response.set_cookie("steam_info", "", secure=True)
             return {}
 
-        if info_max_age:
-            info["expires"] = (datetime.now(timezone.utc) + timedelta(seconds=info_max_age)).timestamp()
         ser = URLSafeSerializer(app.secret_key)
         response.set_cookie(
             "steam_info",
@@ -253,12 +269,19 @@ def create_app():
             return jsonify(friends_info)
         except wcwp.steam.BadWebkeyException:
             return ("Site has bad Steam API key. Please contact us about this error at " + contact_email, 500)
-        except wcwp.steam.SteamException as e:
-            print(e)
-            return ("An unknown error occurred. Please try again later.", 500)
-        except Exception as e:
-            print(traceback.format_exc())
-            return ("An unknown error occurred. Please try again later.", 500)
+        except Exception:
+            traceback.print_exc()
+            if debug:
+                return (
+                    json.dumps({"message": traceback.format_exc(), "errcode": -1}),
+                    500
+                )
+            else:
+                traceback.print_exc()
+                return (
+                    json.dumps({"message": "An unknown error has occurred", "errcode": -1}),
+                    500
+                )
 
     def refresh_igdb_token():
         try:
@@ -288,6 +311,113 @@ def create_app():
         except Exception:
             traceback.print_exc()
             return ""
+
+    cache_init_query = """
+    CREATE TABLE IF NOT EXISTS game (
+        steam_id INTEGER PRIMARY KEY,
+        igdb_id INTEGER,
+        name STRING,
+        supported_players INTEGER DEFAULT(0),
+        cover_id STRING,
+        has_multiplayer BOOLEAN,
+        expiry REAL DEFAULT(0.0)
+    );
+    """
+
+    CACHE_VERSION = 1
+
+    def initialize_cache():
+        import sqlite3
+        cache = sqlite3.connect(cache_file)
+        cache.execute(cache_init_query)
+        #cache.execute("PRAGMA user_version = ?;", [CACHE_VERSION]) # Doesn't work?
+        cache.execute("PRAGMA user_version = %d" % CACHE_VERSION)
+        return cache
+    
+    def cache_is_correct_version(cache):
+        return cache.execute("PRAGMA user_version;").fetchone()[0] == CACHE_VERSION
+
+    def update_cached_games(game_info):
+        if not cache_file:
+            return
+        
+        try:
+            import sqlite3
+            cache = None
+
+            if os.path.exists(cache_file):
+                cache = sqlite3.connect(cache_file)
+                # Check if cache is correct version
+                if not cache_is_correct_version(cache):
+                    # Cache is the wrong version, rebuild
+                    print("Cache file is the wrong version! Rebuilding... ")
+                    cache.close()
+                    os.remove(cache_file)
+                    cache = initialize_cache()
+            else:
+                cache = initialize_cache()
+            
+            insert_info = [
+                [
+                    game.get("steam_id"),
+                    game.get("igdb_id"),
+                    game.get("name"),
+                    game.get("supported_players"),
+                    game.get("cover_id"),
+                    game.get("has_multiplayer"),
+                    datetime.now(timezone.utc).timestamp() + cache_max_age
+                ] for game in game_info
+            ]
+            
+            cache.executemany(
+                "INSERT OR REPLACE INTO game VALUES (?,?,?,?,?,?,?);",
+                insert_info
+            )
+
+            cache.commit()
+            cache.close()
+        except Exception:
+            print("FAILED TO UPDATE CACHE DB")
+            traceback.print_exc()
+            return
+    
+    # returns [info of cached games], (set of uncached ids)
+    def get_cached_games(steam_ids):
+        if not cache_file:
+            return [], set(steam_ids)
+
+        game_info = []
+        uncached = set(steam_ids)
+        
+        try:
+            import sqlite3
+            cache = sqlite3.connect(cache_file)
+            cache.row_factory = sqlite3.Row
+
+            if not cache_is_correct_version(cache):
+                return [], set(steam_ids)
+            
+            query_str = "SELECT * FROM game WHERE steam_id IN (%s)" % ("?" + (",?" * (len(steam_ids) - 1))) # Construct a query with arbitrary parameter length
+            
+            cursor = cache.execute(
+                query_str,
+                steam_ids
+            )
+            for row in cursor.fetchall():
+                game = dict(row)
+                if datetime.now(timezone.utc).timestamp() < game.pop("expiry"):
+                    # Info hasn't expired
+                    game_info.append(game)
+                    uncached.remove(game["steam_id"])
+
+                # Expired info gets updated during update_cached_games()
+        except Exception:
+            print("EXCEPTION THROWN WHILE QUERYING GAME CACHE!")
+            traceback.print_exc()
+            return [], set(steam_ids)
+        
+        return game_info, uncached
+        
 
     # Errcodes
     # -1: An error occurred with a message. Additional fields: "message"
@@ -353,18 +483,43 @@ def create_app():
 
         try:
             token = get_igdb_token()
-            game_info = wcwp.intersect_owned_games(steam_key, igdb_key, token, list(steamids))
+            game_ids = wcwp.steam.intersect_owned_game_ids(steam_key, list(steamids))
+
+            game_info, uncached_ids = get_cached_games(game_ids)
+
+            fetched_game_count = 0
+            cached_game_count = len(game_info)
+
+            if uncached_ids:
+                fetched_info, not_found = wcwp.igdb.get_steam_game_info(igdb_key, token, list(uncached_ids))
+
+                cache_info_update = fetched_info
+                if not_found:
+                    for uncached_id in [id for id in not_found]:
+                        cache_info_update.append({"steam_id": uncached_id}) # Cache empty data to prevent further IGDB fetch attempts
+                update_cached_games(cache_info_update) # TODO: Spin up separate process for caching?
+
+                game_info += fetched_info
+                fetched_game_count = len(fetched_info)
+            
+            print("Intersection resulted in %d games (%d from cache, %d from IGDB)" % (len(game_info), cached_game_count, fetched_game_count))
 
             return jsonify({
                 "message": "Intersected successfully",
-                "games": list(game_info),
+                "games": game_info,
                 "errcode": 0
             })
         except Exception:
             traceback.print_exc()
-            return (
-                json.dumps({"message": "An unknown error has occurred", "errcode": -1}),
-                500
-            )
+            if debug:
+                return (
+                    json.dumps({"message": traceback.format_exc(), "errcode": -1}),
+                    500
+                )
+            else:
+                return (
+                    json.dumps({"message": "An unknown error has occurred", "errcode": -1}),
+                    500
+                )
 
     return app

@@ -64,7 +64,7 @@ window.addEventListener("load", function() {
                 child.src = default_avatar_url;
                 break;
             case "user-name":
-                child.innerHTML = "";
+                child.innerText = "";
                 break;
             case "user-checkbox":
                 delete child.dataset.steamId;
@@ -121,9 +121,9 @@ function submitButtonClicked()
     error_div.style.display = "none"
     fetching = true;
     submit.disabled = true;
-    submit.innerHTML = "Fetching..."
+    submit.innerText = "Fetching..."
     back.disabled = true;
-    back.innerHTML = "Fetching..."
+    back.innerText = "Fetching..."
     users_cover.style.display = "block";
 
     if(app.className.includes("on-users") || app.className.includes("slide-to-users"))
@@ -163,9 +163,9 @@ function submitButtonClicked()
     .catch(apiError)
     .finally(function() {
         submit.disabled = false;
-        submit.innerHTML = "Find Games";
+        submit.innerText = "Find Games";
         back.disabled = false;
-        back.innerHTML = "Back";
+        back.innerText = "Back";
         fetching = false;
         users_cover.style.display = "none"
     })
@@ -284,15 +284,16 @@ function intersectResponse(data) {
                         }
                         break;
                     case "game-title":
-                        child.innerHTML = game["name"]
+                        child.innerText = game["name"]
                         break;
                     case "user-count":
                         Array.from(child.children).forEach(function(child) {
                             if(child.className == "user-number")
                             {
-                                child.innerHTML = game["supported_players"]
-                                if(game["supported_players"] == "?")
+                                child.innerText = game["supported_players"]
+                                if(game["supported_players"] == "0")
                                 {
+                                    child.innerText = "?"
                                     child.classList.add("short")
                                     child.title = "WhatCanWePlay was unable to retrieve the player count for this game from the IGDB"
                                 }
@@ -419,7 +420,7 @@ function friendDataFetched(data)
                     }
                     break;
                 case "user-name":
-                    child.innerHTML = user["screen_name"];
+                    child.innerText = user["screen_name"];
                     break;
                 case "user-checkbox":
                     if(user["visibility"] != 3)
@@ -472,12 +473,12 @@ function userCheckboxClicked(box)
             if(len >= 2)
             {
                 submit.disabled = false;
-                submit.innerHTML = "Find Games"
+                submit.innerText = "Find Games"
             }
             else
             {
                 submit.disabled = true;
-                submit.innerHTML = "Select " + (len == 0 ? "Two Users" : "One User")
+                submit.innerText = "Select " + (len == 0 ? "Two Users" : "One User")
             }
         }
         else

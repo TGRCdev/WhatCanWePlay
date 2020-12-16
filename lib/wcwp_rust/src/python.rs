@@ -230,10 +230,25 @@ pub fn get_friend_list(_py: Python, webkey: &str, steamid: u64) -> PyResult<PyOb
     }
 }
 
+#[pyfunction]
+pub fn intersect_owned_game_ids(_py: Python, webkey: &str, steamids: Vec<u64>) -> PyResult<PyObject> {
+    let result = steam::intersect_owned_game_ids(webkey, &steamids);
+
+    match result {
+        Err(e) => {
+            return Err(e.into());
+        },
+        Ok(appids) => {
+            return Ok(PyList::new(_py, appids).into());
+        }
+    }
+}
+
 fn steam_mod(py: &Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(get_steam_users_info, m)?)?;
     m.add_function(wrap_pyfunction!(get_owned_steam_games, m)?)?;
     m.add_function(wrap_pyfunction!(get_friend_list, m)?)?;
+    m.add_function(wrap_pyfunction!(intersect_owned_game_ids, m)?)?;
 
     use steam_exceptions::*;
 
