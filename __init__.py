@@ -196,7 +196,7 @@ def create_app():
     def steam_login():
         if request.method == "POST":
             steam_openid_url = 'https://steamcommunity.com/openid/login'
-            return_url = url_for("steam_login", _external=True)
+            return_url = request.base_url
             params = {
                 'openid.ns': "http://specs.openid.net/auth/2.0",
                 'openid.identity': "http://specs.openid.net/auth/2.0/identifier_select",

@@ -4,7 +4,6 @@
     "steam-key": "YOUR STEAM KEY HERE",
     "igdb-client-id": "YOUR IGDB KEY HERE",
     "igdb-secret": "YOUR IGDB SECRET HERE",
-    "www-host": "yoururl.here",
     "cookie-max-age": {
         "days": 0,
         "weeks": 0
