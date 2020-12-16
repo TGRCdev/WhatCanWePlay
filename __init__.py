@@ -16,6 +16,7 @@
 
 try:
     import shutil, platform, os
+    path_prefix = os.path.dirname(os.path.abspath(__file__))
     source = ""
     dest = ""
     if platform.system() == "Windows":
@@ -24,17 +25,19 @@ try:
     else:
         source = "lib/wcwp_rust/target/release/libwhatcanweplay.so"
         dest = "lib/bin/whatcanweplay.so"
+    source = os.path.join(path_prefix, source)
+    dest = os.path.join(path_prefix, dest)
 
     if not os.path.exists(dest):
-        os.makedirs("lib/bin", exist_ok=True)
-        shutil.copyfile(source, dest)
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        shutil.copy2(source, dest)
     else:
         source_time = os.path.getmtime(source)
         dest_time = os.path.getmtime(dest)
         try:
             if dest_time < source_time:
                 print("Updating WhatCanWePlay rust library with newer library file...")
-                shutil.copyfile(source, dest)
+                shutil.copy2(source, dest)
         except Exception:
             print("Failed to update WhatCanWePlay rust library. It will be re-attempted when next launched.")
     
@@ -81,11 +84,13 @@ def create_app():
     if read_timeout <= 0.0:
         read_timeout = None
     cache_file = config.get("igdb-cache-file")
+    if not os.path.isabs(cache_file):
+        cache_file = os.path.join(root_path, cache_file)
 
     # Create uWSGI callable
     app = Flask(__name__)
     app.debug = debug
-    app.secret_key = config.get("secret-key", secrets.token_hex()) # If not set, cookies will be invalidated every time the app is reloaded
+    app.secret_key = config["secret-key"]
 
     # Hide requests to /steam_login to prevent linking Steam ID to IP in logs
     from werkzeug import serving
@@ -151,17 +156,17 @@ def create_app():
 
     def refresh_steam_cookie(steamid: int, response):
         if steamid <= 0:
-            response.set_cookie("steam_info", "", secure=True)
+            response.set_cookie("steam_info", "", secure=True, httponly=True)
             return {}
         
         info = {}
         try:
             info = wcwp.steam.get_steam_users_info(steam_key, [steamid])[0]
         except wcwp.steam.BadWebkeyException:
-            response.set_cookie("steam_info", "", secure=True)
+            response.set_cookie("steam_info", "", secure=True, httponly=True)
             return {}
         except IndexError:
-            response.set_cookie("steam_info", "", secure=True)
+            response.set_cookie("steam_info", "", secure=True, httponly=True)
             return {}
 
         ser = URLSafeSerializer(app.secret_key)
@@ -182,7 +187,7 @@ def create_app():
         if errcode == 3:
             steam_info = refresh_steam_cookie(steam_info.get("steam_id", -1), response)
         elif errcode != 0:
-            response.set_cookie("steam_info", "", secure=True)
+            response.set_cookie("steam_info", "", secure=True, httponly=True)
             steam_info = {}
         
         response.data = render_template("home.html", steam_info=steam_info, **basic_info_dict())
@@ -222,7 +227,7 @@ def create_app():
     def steam_logout():
         response = redirect(url_for("index"))
         response.headers["X-Robots-Tag"] = "none"
-        response.set_cookie("steam_info", "", secure=True)
+        response.set_cookie("steam_info", "", secure=True, httponly=True)
         return response
 
     def validate_steam_identity(params):
