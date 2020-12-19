@@ -53,8 +53,6 @@ import requests
 from urllib import parse
 from werkzeug.exceptions import BadRequest
 import json
-#from .steam_utils import get_steam_user_info, get_steam_user_friend_list, get_owned_steam_games
-#from .igdb_utils import get_steam_game_info
 from requests import HTTPError
 import secrets
 from datetime import timezone, datetime, timedelta
@@ -162,10 +160,11 @@ def create_app():
         info = {}
         try:
             info = wcwp.steam.get_steam_users_info(steam_key, [steamid])[0]
-        except wcwp.steam.BadWebkeyException:
+        except IndexError:
             response.set_cookie("steam_info", "", secure=True, httponly=True)
             return {}
-        except IndexError:
+        except Exception:
+            traceback.print_exc()
             response.set_cookie("steam_info", "", secure=True, httponly=True)
             return {}
 
@@ -258,7 +257,10 @@ def create_app():
             )
         errcode, steam_info = fetch_steam_cookie(request)
         if "steam_id" not in steam_info.keys():
-            return ("Not signed in to Steam", 403)
+            return (
+                {"message": "Not signed in to Steam", "errcode": -1},
+                403
+            )
         
         try:
             friends_info = wcwp.steam.get_friend_list(
@@ -273,7 +275,20 @@ def create_app():
 
             return jsonify(friends_info)
         except wcwp.steam.BadWebkeyException:
-            return ("Site has bad Steam API key. Please contact us about this error at " + contact_email, 500)
+            return (
+                json.dumps({"message": "Site has bad Steam API key. Please contact us about this error at " + contact_email, "errcode": -1}),
+                500
+            )
+        except wcwp.steam.ServerError:
+            return (
+                json.dumps({"message": "Steam had an internal server error. Please try again later.", "errcode": -1}),
+                500
+            )
+        except wcwp.steam.BadResponse:
+            return (
+                json.dumps({"message": "Steam returned an unparseable response. Please try again later.", "errcode": -1}),
+                500
+            )
         except Exception:
             traceback.print_exc()
             if debug:
@@ -284,7 +299,7 @@ def create_app():
             else:
                 traceback.print_exc()
                 return (
-                    json.dumps({"message": "An unknown error has occurred", "errcode": -1}),
+                    json.dumps({"message": "An unknown error has occurred. Please try again later.", "errcode": -1}),
                     500
                 )
 
@@ -490,22 +505,26 @@ def create_app():
             token = get_igdb_token()
             game_ids = wcwp.steam.intersect_owned_game_ids(steam_key, list(steamids))
 
-            game_info, uncached_ids = get_cached_games(game_ids)
-
             fetched_game_count = 0
-            cached_game_count = len(game_info)
+            cached_game_count = 0
+            game_info = []
 
-            if uncached_ids:
-                fetched_info, not_found = wcwp.igdb.get_steam_game_info(igdb_key, token, list(uncached_ids))
+            if game_ids:
+                game_info, uncached_ids = get_cached_games(game_ids)
 
-                cache_info_update = fetched_info
-                if not_found:
-                    for uncached_id in [id for id in not_found]:
-                        cache_info_update.append({"steam_id": uncached_id}) # Cache empty data to prevent further IGDB fetch attempts
-                update_cached_games(cache_info_update) # TODO: Spin up separate process for caching?
+                cached_game_count = len(game_info)
 
-                game_info += fetched_info
-                fetched_game_count = len(fetched_info)
+                if uncached_ids:
+                    fetched_info, not_found = wcwp.igdb.get_steam_game_info(igdb_key, token, list(uncached_ids))
+
+                    cache_info_update = fetched_info
+                    if not_found:
+                        for uncached_id in [id for id in not_found]:
+                            cache_info_update.append({"steam_id": uncached_id}) # Cache empty data to prevent further IGDB fetch attempts
+                    update_cached_games(cache_info_update) # TODO: Spin up separate process for caching?
+
+                    game_info += fetched_info
+                    fetched_game_count = len(fetched_info)
             
             print("Intersection resulted in %d games (%d from cache, %d from IGDB)" % (len(game_info), cached_game_count, fetched_game_count))
 
@@ -514,6 +533,21 @@ def create_app():
                 "games": game_info,
                 "errcode": 0
             })
+        except wcwp.steam.BadWebkeyException:
+            return (
+                json.dumps({"message": "Site has bad Steam API key. Please contact us about this error at " + contact_email, "errcode": -1}),
+                500
+            )
+        except wcwp.steam.ServerError:
+            return (
+                json.dumps({"message": "Steam had an internal server error. Please try again later.", "errcode": -1}),
+                500
+            )
+        except wcwp.steam.BadResponse:
+            return (
+                json.dumps({"message": "Steam returned an unparseable response. Please try again later.", "errcode": -1}),
+                500
+            )
         except Exception:
             traceback.print_exc()
             if debug:

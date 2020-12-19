@@ -223,8 +223,13 @@ pub fn get_friend_list(webkey: &str, steamid: u64) -> Result<Vec<SteamUser>, Ste
 
     let response_json: serde_json::Value = response_json.unwrap();
 
-    let friendslist = &response_json["friendslist"]["friends"];
-
+    let friendslist = &response_json["friendslist"];
+    if friendslist.is_null()
+    {
+        return Err(SteamError::FriendListPrivate);
+    }
+    
+    let friendslist = &response_json["friends"];
     let mut user_ids = Vec::new();
 
     if let Some(friendslist) = friendslist.as_array()
@@ -248,6 +253,10 @@ pub fn get_friend_list(webkey: &str, steamid: u64) -> Result<Vec<SteamUser>, Ste
             }
         }
     }
+    else
+    {
+        return Err(SteamError::FriendListPrivate);
+    }
 
     if user_ids.is_empty() {
         return Ok(Vec::new())
@@ -267,8 +276,19 @@ pub fn intersect_owned_game_ids(webkey: &str, steamids: &[u64])-> Result<HashSet
 
     let mut games_set = get_owned_steam_games(webkey, steamids[0])?;
 
+    if games_set.is_empty()
+    {
+        return Err(SteamError::GamesListEmpty(steamids[0]));
+    }
+
     for &id in steamids[1..].iter() {
         let next_set = get_owned_steam_games(webkey, id)?;
+
+        if next_set.is_empty()
+        {
+            return Err(SteamError::GamesListEmpty(id));
+        }
+
         games_set = &games_set & &next_set; // Intersect the two sets
 
         if games_set.is_empty()

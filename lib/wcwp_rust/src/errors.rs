@@ -32,6 +32,9 @@ pub enum SteamError {
     ServerError, // Steam had an internal error
     BadResponse, // Steam returned an unparseable response
     BadWebkey, // The supplied webkey is wrong
+    GamesListPrivate(u64), // The games list of the given steam id is unretrievable, probably due to game list privacy settings
+    GamesListEmpty(u64), // Intersection failed, the user with the given steam id had no games
+    FriendListPrivate, // The steam id passed to get_friend_list() has their friend list set to private
 }
 
 impl fmt::Display for SteamError {
@@ -41,6 +44,9 @@ impl fmt::Display for SteamError {
             SteamError::BadResponse => return write!(f, "Steam returned an unparseable response"),
             SteamError::BadWebkey => return write!(f, "Steam rejected the provided webkey"),
             SteamError::UnknownError(err_string) => return write!(f, "{}", &err_string),
+            SteamError::GamesListPrivate(steamid) => return write!(f, "The user with Steam ID {} has their games list set to private", steamid),
+            SteamError::GamesListEmpty(steamid) => return write!(f, "The user with the Steam ID {} has no games to intersect", steamid),
+            SteamError::FriendListPrivate => return write!(f, "The given user has their friend list set to private"),
             _ => return write!(f, "Steam had an unknown error")
         }
     }
