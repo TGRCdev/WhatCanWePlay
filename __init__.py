@@ -75,6 +75,7 @@ def create_app():
     contact_email = config["contact-email"]
     privacy_email = config.get("privacy-email", contact_email)
     connect_timeout = config.get("connect-timeout", 0.0)
+    commit_hash_filename = config.get("commit-hash-file", ".wcwp-commit-hash")
     donate_url = config.get("donate-url", "")
     if connect_timeout <= 0.0:
         connect_timeout = None
@@ -114,14 +115,45 @@ def create_app():
     print("cookies set to expire after %f seconds" % cookie_max_age)
     print("cache set to expire after %f seconds" % cache_max_age)
 
+    def fetch_and_store_commit_hash():
+        f = open(commit_hash_filename, "w")
+        import subprocess
+        try:
+            commit_hash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).decode("utf-8").strip()
+            f.write(commit_hash)
+            f.close()
+            return commit_hash
+        except subprocess.CalledProcessError:
+            return ""
+
+    @app.before_first_request
+    def before_first_request():
+        fetch_and_store_commit_hash()
+
+    def get_commit_hash():
+        try:
+            f = open(commit_hash_filename, "r")
+            hash = f.read()
+            print(hash)
+            return hash
+        except Exception:
+            traceback.print_exc()
+            return ""
+
     def basic_info_dict():
         email_rev = contact_email.split("@")
-        return {
+        basic_info = {
             "contact_email_user_reversed": email_rev[0][::-1],
             "contact_email_domain_reversed": email_rev[1][::-1],
             "source_url": source_url,
             "donate_url": donate_url
         }
+
+        commit = get_commit_hash()
+        if commit:
+            basic_info["commit"] = commit
+        
+        return basic_info
 
     # Tries to fetch the Steam info cookie, returns an errcode and a dict
     #

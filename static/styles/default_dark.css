@@ -79,9 +79,21 @@ html, body {
     color:gold; /* give me money */
 }
 
+#commit {
+    font-size: smaller;
+    font-family: 'Courier New', Courier, monospace;
+}
+
 /* Desktop Overrides */
 @media (min-width: 601px) {
     #body-box {
         max-width: 1000px;
+    }
+}
+
+/* Mobile Overrides */
+@media (max-width: 600px) {
+    #commit {
+        display: none;
     }
 }
