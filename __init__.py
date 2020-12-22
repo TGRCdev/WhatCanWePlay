@@ -118,12 +118,19 @@ def create_app():
     def fetch_and_store_commit_hash():
         f = open(commit_hash_filename, "w")
         import subprocess
+        args = ['--git-dir=' + os.path.join(os.path.abspath(os.path.dirname(__file__)), ".git"), 'rev-parse', '--short', 'HEAD']
         try:
-            commit_hash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD']).decode("utf-8").strip()
-            f.write(commit_hash)
-            f.close()
-            return commit_hash
-        except subprocess.CalledProcessError:
+            try:
+                commit_hash = subprocess.check_output(['git'] + args).decode("utf-8").strip()
+                f.write(commit_hash)
+                f.close()
+                return commit_hash
+            except:
+                commit_hash = subprocess.check_output(['/usr/bin/git'] + args).decode("utf-8").strip()
+                f.write(commit_hash)
+                f.close()
+                return commit_hash
+        except:
             return ""
 
     @app.before_first_request
@@ -134,7 +141,6 @@ def create_app():
         try:
             f = open(commit_hash_filename, "r")
             hash = f.read()
-            print(hash)
             return hash
         except Exception:
             traceback.print_exc()
