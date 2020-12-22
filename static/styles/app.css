@@ -306,6 +306,11 @@ html, body {
     color: goldenrod;
 }
 
+.err-user-name {
+    font-style: italic;
+    font-size: larger;
+}
+
 /* Desktop Overrides */
 @media (min-width: 601px) {
     #app {

@@ -139,6 +139,7 @@ pub fn get_steam_users_info(webkey: &str, steamids: &[u64]) -> Result<Vec<SteamU
 pub fn get_owned_steam_games(webkey: &str, steamid: u64) -> Result<HashSet<u64>, SteamError> {
     let base_url = Url::parse(API_URL).unwrap();
     let client = reqwest::blocking::Client::new();
+
     let response = client.get(base_url.join("IPlayerService/GetOwnedGames/v0001/").unwrap())
         .query(&[
             ("key", webkey),
@@ -229,7 +230,8 @@ pub fn get_friend_list(webkey: &str, steamid: u64) -> Result<Vec<SteamUser>, Ste
         return Err(SteamError::FriendListPrivate);
     }
     
-    let friendslist = &response_json["friends"];
+    let friendslist = &friendslist["friends"];
+    
     let mut user_ids = Vec::new();
 
     if let Some(friendslist) = friendslist.as_array()

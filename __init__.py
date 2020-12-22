@@ -258,7 +258,7 @@ def create_app():
         errcode, steam_info = fetch_steam_cookie(request)
         if "steam_id" not in steam_info.keys():
             return (
-                {"message": "Not signed in to Steam", "errcode": -1},
+                "Not signed in to Steam. Please refresh the page.",
                 403
             )
         
@@ -275,31 +275,40 @@ def create_app():
 
             return jsonify(friends_info)
         except wcwp.steam.BadWebkeyException:
+            traceback.print_exc()
             return (
-                json.dumps({"message": "Site has bad Steam API key. Please contact us about this error at " + contact_email, "errcode": -1}),
+                "Site has bad Steam API key. Please contact us about this error at " + contact_email,
                 500
             )
-        except wcwp.steam.ServerError:
+        except wcwp.steam.ServerErrorException:
+            traceback.print_exc()
             return (
-                json.dumps({"message": "Steam had an internal server error. Please try again later.", "errcode": -1}),
+                "Steam had an internal server error. Please try again later.",
                 500
             )
-        except wcwp.steam.BadResponse:
+        except wcwp.steam.BadResponseException:
+            traceback.print_exc()
             return (
-                json.dumps({"message": "Steam returned an unparseable response. Please try again later.", "errcode": -1}),
+                "Steam returned an unparseable response. Please try again later.",
+                500
+            )
+        except wcwp.steam.FriendListPrivateException:
+            traceback.print_exc()
+            return (
+                "WhatCanWePlay cannot retrieve your friend list. Please change your friend list visibility to public and refresh the page.",
                 500
             )
         except Exception:
             traceback.print_exc()
             if debug:
                 return (
-                    json.dumps({"message": traceback.format_exc(), "errcode": -1}),
+                    traceback.format_exc(),
                     500
                 )
             else:
                 traceback.print_exc()
                 return (
-                    json.dumps({"message": "An unknown error has occurred. Please try again later.", "errcode": -1}),
+                    "An unknown error has occurred. Please try again later.",
                     500
                 )
 
@@ -534,18 +543,39 @@ def create_app():
                 "errcode": 0
             })
         except wcwp.steam.BadWebkeyException:
+            traceback.print_exc()
             return (
                 json.dumps({"message": "Site has bad Steam API key. Please contact us about this error at " + contact_email, "errcode": -1}),
                 500
             )
-        except wcwp.steam.ServerError:
+        except wcwp.steam.ServerErrorException:
+            traceback.print_exc()
             return (
                 json.dumps({"message": "Steam had an internal server error. Please try again later.", "errcode": -1}),
                 500
             )
-        except wcwp.steam.BadResponse:
+        except wcwp.steam.BadResponseException:
+            traceback.print_exc()
             return (
                 json.dumps({"message": "Steam returned an unparseable response. Please try again later.", "errcode": -1}),
+                500
+            )
+        except wcwp.steam.GamesListPrivateException as e:
+            if debug:
+                print(e)
+            else:
+                print("Intersection interrupted due to private games list")
+            return (
+                json.dumps({"errcode": 1, "user": str(e.args[1])}),
+                500
+            )
+        except wcwp.steam.GamesListEmptyException as e:
+            if debug:
+                print(e)
+            else:
+                print("Intersection interrupted due to private games list")
+            return (
+                json.dumps({"errcode": 2, "user": str(e.args[1])}),
                 500
             )
         except Exception:
@@ -557,7 +587,7 @@ def create_app():
                 )
             else:
                 return (
-                    json.dumps({"message": "An unknown error has occurred", "errcode": -1}),
+                    json.dumps({"message": "An unknown error has occurred. Please try again later.", "errcode": -1}),
                     500
                 )
 

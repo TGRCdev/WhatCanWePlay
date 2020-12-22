@@ -175,6 +175,9 @@ pub mod steam_exceptions {
     create_exception!(steam, ServerErrorException, SteamException);
     create_exception!(steam, BadResponseException, SteamException);
     create_exception!(steam, BadWebkeyException, SteamException);
+    create_exception!(steam, GamesListPrivateException, SteamException);
+    create_exception!(steam, GamesListEmptyException, SteamException);
+    create_exception!(steam, FriendListPrivateException, SteamException);
 
     impl From<SteamError> for PyErr {
         fn from(e: SteamError) -> PyErr {
@@ -182,6 +185,9 @@ pub mod steam_exceptions {
                 SteamError::ServerError => ServerErrorException::new_err(e.to_string()),
                 SteamError::BadResponse => BadResponseException::new_err(e.to_string()),
                 SteamError::BadWebkey => BadWebkeyException::new_err(e.to_string()),
+                SteamError::FriendListPrivate => FriendListPrivateException::new_err(e.to_string()),
+                SteamError::GamesListPrivate(steamid) => GamesListPrivateException::new_err((e.to_string(), steamid)),
+                SteamError::GamesListEmpty(steamid) => GamesListEmptyException::new_err((e.to_string(), steamid)),
                 _ => UnknownErrorException::new_err(e.to_string()),
             }
         }
@@ -258,6 +264,9 @@ fn steam_mod(py: &Python, m: &PyModule) -> PyResult<()> {
     expose_exception!(py, m, ServerErrorException)?;
     expose_exception!(py, m, BadResponseException)?;
     expose_exception!(py, m, BadWebkeyException)?;
+    expose_exception!(py, m, FriendListPrivateException)?;
+    expose_exception!(py, m, GamesListEmptyException)?;
+    expose_exception!(py, m, GamesListPrivateException)?;
 
     return Ok(());
 }

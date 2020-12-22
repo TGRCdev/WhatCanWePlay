@@ -36,6 +36,8 @@ var current_slide_timeout;
 
 var fetching = false;
 
+var main_user_id = 0;
+
 window.addEventListener("load", function() {
     submit = document.getElementById("submit-button");
     submit.addEventListener("click", submitButtonClicked);
@@ -72,6 +74,8 @@ window.addEventListener("load", function() {
         }
     }
 
+    var main_user_info = {}
+
     for(var i = 0; i < main_user.children.length; i++)
     {
         var child = main_user.children[i];
@@ -89,8 +93,19 @@ window.addEventListener("load", function() {
             else
             {
                 userCheckboxClicked(child);
+                main_user_id = child.dataset.steamId;
+                main_user_info["steam_id"] = main_user_id;
             }
         }
+        else if(child.className == "user-name")
+        {
+            main_user_info["screen_name"] = child.children[0].innerText;
+        }
+    }
+
+    if(main_user_id != 0)
+    {
+        user_info[main_user_id] = main_user_info
     }
 
     // Fetch friends list
@@ -174,16 +189,16 @@ function submitButtonClicked()
 function intersectResponse(data) {
     if(data["errcode"] == 1)
     { // User has non-visible games list
-        displayError("WhatCanWePlay cannot access the games list of " + user_info[data["user"]]["screen_name"] + ". This either means that their Game details visibility is not Public, or they are being rate-limited by Steam for having too many requests. You can try one of the following fixes:\
-        <br><br>- Ask " + user_info[data["user"]]["screen_name"] + " to set their Game details to Public\
-        <br>- Remove " + user_info[data["user"]]["screen_name"] + " from your selected users\
+        displayError("WhatCanWePlay cannot access the games list of <span class='err-user-name'>" + user_info[data["user"]]["screen_name"] + "</span>. This either means that their Game details visibility is not Public, or they are being rate-limited by Steam for having too many requests. You can try one of the following fixes:\
+        <br><br>- Ask <span class='err-user-name'>" + user_info[data["user"]]["screen_name"] + "</span> to set their Game details to Public\
+        <br>- Remove <span class='err-user-name'>" + user_info[data["user"]]["screen_name"] + "</span> from your selected users\
         <br>- Try again later\
         ");
         return;
     }
     else if(data["errcode"] == 2)
     { // User has empty games list
-        displayError(user_info[data["user"]]["screen_name"] + " has an empty games list, and cannot possibly share any common games with the selected users. Please deselect " + user_infp[data["user"]]["screen_name"] + " and try again.")
+        displayError("<span class='err-user-name'>" + user_info[data["user"]]["screen_name"] + "</span> has an empty games list, and cannot possibly share any common games with the selected users. Please deselect <span class='err-user-name'>" + user_info[data["user"]]["screen_name"] + "</span> and try again.")
         return;
     }
     else if(data["errcode"] != 0)
