@@ -4,14 +4,9 @@
     "steam-key": "YOUR STEAM KEY HERE",
     "igdb-client-id": "YOUR IGDB KEY HERE",
     "igdb-secret": "YOUR IGDB SECRET HERE",
-    "www-host": "yoururl.here",
     "cookie-max-age": {
         "days": 0,
         "weeks": 0
-    },
-    "info-max-age": {
-        "hours": 0,
-        "minutes": 0
     },
     "source-url": "https://git.tgrc.dev/tgrcdev/whatcanweplay",
     "contact-email": "contact@whatcanweplay.net",
@@ -19,7 +14,7 @@
     "connect-timeout": 8,
     "read-timeout": 30,
     "igdb-cache-file": "igdb-cache.sqlite",
-    "igdb-cache-info-age": {
+    "igdb-cache-max-age": {
         "weeks": 4
     }
 }
