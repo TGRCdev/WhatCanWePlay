@@ -18,28 +18,28 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 -->
 <html>
     <head>
-        {% block head %}
-        {% block meta %}
+        {% block head -%}
+        {%- block meta -%}
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="description" content="A web app for finding Steam games you and your friends already own.">
         <meta name="author" content="TGRCDev">
-        {% endblock %}
-
+        {% endblock -%} {#- meta #}
         <title>
-            {% block title %}{% endblock %}
-            {% block title_postfix %}
+            {%- block title -%}{%- endblock -%}
+            {%- block title_postfix -%}
              - What Can We Play?
-            {% endblock %}
+            {%- endblock -%} {# title_postfix -#}
         </title>
 
-        {% block styles %}
+        {% block styles -%}
         <link rel="stylesheet" href="static/styles/default_dark.css" />
-        {% endblock %}
+        {%- endblock -%} {#- styles #}
 
-        {% block scripts %}
-        {% endblock %}
+        {%- block scripts -%}
+        {%- endblock -%} {#- scripts -#}
 
-        {% endblock %}
+        {%- endblock -%} {#- head -#}
+
         {% if contact_email_user_reversed and contact_email_domain_reversed %}
         <script>
             window.addEventListener("load",function() {
@@ -50,7 +50,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                 contact.href = mailto.split("").reverse().join("") + user.split("").reverse().join("") + "@" + address.split("").reverse().join("")
             })
         </script>
-        {% endif %}
+        {%- endif %}
     </head>
     <body>
         <div id="page-flexbox">
@@ -58,13 +58,18 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                 <a id="title-link" href="/">What Can We Play?</a>
             </div>
             <div id="body-box">
-                {% block content %}
-                {% endblock %}
+                {%- block content -%}
+                {%- endblock -%} {#- content -#}
             </div>
             <div id="footer-box">
                 <div>
                     <div id="copyright">© 2020 TGRCDev</div>
-                    {% if commit %}<div id="commit">Commit <a href="{{ source_url ~ '/commit/' ~ commit }}">{{ commit }}</a></div>{% endif %}
+                    {%- if commit -%}
+                    <div id="commit">Commit 
+                        {%- if source_url %}<a href="{{ source_url ~ '/commit/' ~ commit }}">{% endif -%}
+                            {{ commit }}{% if source_url %}</a>{% endif -%}
+                    </div>
+                    {%- endif -%}
                 </div>
                 <nav id="footer-nav">
                     {% if donate_url %}<a id="donate" href="{{ donate_url }}">Donate</a> | {% endif -%}
