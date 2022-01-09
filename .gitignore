@@ -9,3 +9,7 @@ lib/wcwp_rust/Cargo.lock
 lib/whatcanweplay.pyd
 lib/bin
 .wcwp-commit-hash
+
+# Added by cargo
+
+/target
