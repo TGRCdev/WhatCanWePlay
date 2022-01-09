@@ -1,5 +1,5 @@
 __pycache__
-config.json
+wcwp_config.json
 venv*
 .vscode
 igdb-cache.sqlite

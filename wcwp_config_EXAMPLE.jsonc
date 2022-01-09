@@ -1,0 +1,5 @@
+{
+    "source_url": "https://git.tgrc.dev/TGRCDev/WhatCanWePlay", // Provides a Source link in the footer
+    "contact_email": "contact@whatcanweplay.net", // Provides a Contact link in the footer
+    "donate_url": "https://paypal.me/TGRCDeveloper" // Provides a Donate link in the footer
+}

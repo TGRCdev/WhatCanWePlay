@@ -16,7 +16,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #}
 
-{% extends "base_page.html" %}
+{% extends "base_page" %}
 {% block title %}Privacy Policy{% endblock %}
 
 {% block content %}

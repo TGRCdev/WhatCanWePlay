@@ -16,7 +16,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #}
 
-{% extends "base_page.html" %}
+{% extends "base_page" %}
 
 {% block title %}What Can We Play?{% endblock %}
 {% block title_postfix %}{% endblock %}
@@ -27,14 +27,14 @@
 
 {% block styles %}
 {{ super() }}
-<link rel="stylesheet" href="{{ url_for('static', filename='styles/app.css') }}"/>
+<link rel="stylesheet" href="static/styles/app.css"/>
 {% endblock %}
 
 {% block scripts %}
 {{ super() }}
 {% if steam_info %}
-<script src="{{ url_for('static', filename='scripts/fetch_timeout.js') }}"></script>
-<script src="{{ url_for('static', filename='scripts/app.js') }}"></script>
+<script src="static/scripts/fetch_timeout.js"></script>
+<script src="static/scripts/app.js"></script>
 {% endif %}
 {% endblock %}
 
@@ -45,7 +45,7 @@
         {% if steam_info %}
         data-visibility="{{ steam_info.visibility }}"
         {% endif %}>
-            <img class="user-img{% if not steam_info %} offline{% endif %}" src="{% if steam_info %}{{ steam_info.avatar }}{% else %}{{ url_for('static', filename='images/default_avatar.png') }}{% endif %}"/>
+            <img class="user-img{% if not steam_info %} offline{% endif %}" src="{% if steam_info %}{{ steam_info.avatar }}{% else %}static/images/default_avatar.png{% endif %}"/>
             <div class="user-name">
                 {% if steam_info %}
                 <div>{{ steam_info.screen_name }}</div>
@@ -59,7 +59,7 @@
             </button>
         </div>
         <input type="text" {% if not steam_info %}class="not-signed-in-hide"{% endif %} id="user-search" placeholder="Search by name" {% if not steam_info %}disabled{% endif %} />
-        <div id="friends" data-default-avatar="{{ url_for('static', filename='images/default_avatar.png') }}">
+        <div id="friends" data-default-avatar="static/images/default_avatar.png">
             {% if not steam_info %}
             <div id="not-signed-in">
                 To start using WhatCanWePlay, you must sign in by clicking the button below.
@@ -85,11 +85,11 @@
             <div id="error-info">An unknown error occurred. Please try again later.</div>
         </div>
         <div id="game-template" class="game list-item">
-            <img src="{{ url_for('static', filename='images/default_cover.jpg') }}" class="game-cover" />
+            <img src="static/images/default_cover.jpg" class="game-cover" />
             <div class="game-title"></div>
             <div class="user-count">
                 <span class="supports">Supports</span>
-                <img class="users-icon" src="{{ url_for('static', filename='images/users-icon.svg') }}" alt="User Count" />
+                <img class="users-icon" src="static/images/users-icon.svg" alt="User Count" />
                 <span class="user-number">?</span>
             </div>
         </div>

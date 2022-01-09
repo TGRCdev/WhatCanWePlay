@@ -33,13 +33,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         </title>
 
         {% block styles %}
-        <link rel="stylesheet" href="{{ url_for('static', filename='styles/default_dark.css') }}" />
+        <link rel="stylesheet" href="static/styles/default_dark.css" />
         {% endblock %}
 
         {% block scripts %}
         {% endblock %}
 
         {% endblock %}
+        {% if contact_email_user_reversed and contact_email_domain_reversed %}
         <script>
             window.addEventListener("load",function() {
                 var contact = this.document.getElementById("contact-link")
@@ -49,6 +50,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                 contact.href = mailto.split("").reverse().join("") + user.split("").reverse().join("") + "@" + address.split("").reverse().join("")
             })
         </script>
+        {% endif %}
     </head>
     <body>
         <div id="page-flexbox">
@@ -62,10 +64,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
             <div id="footer-box">
                 <div>
                     <div id="copyright">© 2020 TGRCDev</div>
-                    {% if commit %}<div id="commit">Commit <a href="{{ source_url + '/commit/' + commit }}">{{ commit }}</a></div>{% endif %}
+                    {% if commit %}<div id="commit">Commit <a href="{{ source_url ~ '/commit/' ~ commit }}">{{ commit }}</a></div>{% endif %}
                 </div>
                 <nav id="footer-nav">
-                    <a id="donate" href="{{ donate_url }}">Donate</a> | <a href="/privacy">Privacy</a> | <a href="{{ source_url }}">Source</a> | <a id="contact-link">Contact</a>
+                    {% if donate_url %}<a id="donate" href="{{ donate_url }}">Donate</a> | {% endif -%}
+                    <a href="/privacy">Privacy</a> | 
+                    {% if source_url %}<a href="{{ source_url }}">Source</a> | {% endif -%}
+                    {% if contact_email_user_reversed and contact_email_domain_reversed %}<a id="contact-link">Contact</a>{% endif %}
                 </nav>
             </div>
         </div>
