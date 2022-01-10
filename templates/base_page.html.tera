@@ -26,9 +26,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
         {% endblock -%} {#- meta #}
         <title>
             {%- block title -%}{%- endblock -%}
-            {%- block title_postfix -%}
-             - What Can We Play?
-            {%- endblock -%} {# title_postfix -#}
+            {%- block title_postfix %} - What Can We Play?{%- endblock -%}
         </title>
 
         {% block styles -%}
@@ -40,14 +38,24 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
         {%- endblock -%} {#- head -#}
 
-        {% if contact_email_user_reversed and contact_email_domain_reversed %}
+        {% if contact_email and contact_email.user_reversed and contact_email.domain_reversed %}
         <script>
             window.addEventListener("load",function() {
-                var contact = this.document.getElementById("contact-link")
-                var mailto = ":otliam"
-                var user = "{{ contact_email_user_reversed }}"
-                var address = "{{ contact_email_domain_reversed }}"
-                contact.href = mailto.split("").reverse().join("") + user.split("").reverse().join("") + "@" + address.split("").reverse().join("")
+                var emailElems = Array.from(this.document.getElementsByClassName("protected-email"))
+                for(var contact of emailElems)
+                {
+                    var mailto = ":otliam"
+                    var user = contact.dataset.user
+                    var domain = contact.dataset.domain
+                    var email = user.split("").reverse().join("") + "@" + domain.split("").reverse().join("")
+                    contact.href = mailto.split("").reverse().join("") + email
+                    if(contact.dataset.setTextToEmail != undefined)
+                    {
+                        contact.innerHTML = email
+                    }
+                    contact.title = ""
+                    contact.classList.remove("protected-email")
+                }
             })
         </script>
         {%- endif %}
@@ -65,8 +73,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                 <div>
                     <div id="copyright">© 2020 TGRCDev</div>
                     {%- if commit -%}
-                    <div id="commit">Commit 
-                        {%- if source_url %}<a href="{{ source_url ~ '/commit/' ~ commit }}">{% endif -%}
+                    <div id="commit">commit {% if source_url -%}
+                        <a href="{{ source_url ~ '/commit/' ~ commit }}">{% endif -%}
                             {{ commit }}{% if source_url %}</a>{% endif -%}
                     </div>
                     {%- endif -%}
@@ -75,7 +83,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
                     {% if donate_url %}<a id="donate" href="{{ donate_url }}">Donate</a> | {% endif -%}
                     <a href="/privacy">Privacy</a> | 
                     {% if source_url %}<a href="{{ source_url }}">Source</a> | {% endif -%}
-                    {% if contact_email_user_reversed and contact_email_domain_reversed %}<a id="contact-link">Contact</a>{% endif %}
+                    {% if contact_email and contact_email.user_reversed and contact_email.domain_reversed -%}
+                    <a class="protected-email" title="Enable JavaScript to show the email" data-user="{{ contact_email.user_reversed }}" data-domain="{{ contact_email.domain_reversed }}">Contact</a>
+                    {%- endif %}
                 </nav>
             </div>
         </div>

@@ -14,18 +14,106 @@ use rocket_dyn_templates::{
 };
 use std::borrow::Cow;
 
-use serde::{ Serialize, Deserialize };
+use serde::{
+    Serialize, Deserialize,
+    de::{
+        Visitor, Unexpected,
+    },
+};
 
 const DEFAULT_CONFIG_PATH: &'static str = "wcwp_config.json";
+
+#[derive(Serialize)]
+struct EmailProtector {
+    pub user_reversed: String,
+    pub domain_reversed: String,
+    pub email: String,
+}
+
+#[allow(dead_code)]
+impl EmailProtector {
+    pub fn new(email: &str) -> Self {
+        let (user, domain) = email.split_once('@')
+            .expect(format!("Invalid email given to EmailProtector ({})", email).as_str());
+        
+        Self {
+            user_reversed: user.chars().rev().collect(),
+            domain_reversed: domain.chars().rev().collect(),
+            email: email.to_string(),
+        }
+    }
+
+    pub fn get_email(&self) -> String {
+        return self.user_reversed.chars().rev()
+            .chain(['@'].into_iter())
+            .chain(self.domain_reversed.chars().rev())
+            .collect();
+    }
+
+    pub fn get_user(&self) -> String {
+        return self.user_reversed.chars().rev().collect();
+    }
+
+    pub fn get_domain(&self) -> String {
+        return self.domain_reversed.chars().rev().collect();
+    }
+}
+
+impl Default for EmailProtector {
+    fn default() -> Self {
+        Self { user_reversed: Default::default(), domain_reversed: Default::default(), email: Default::default() }
+    }
+}
+
+struct EmailProtectorVisitor;
+
+impl Visitor<'_> for EmailProtectorVisitor {
+    type Value = EmailProtector;
+
+    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+        formatter.write_str("a string containing '@'")
+    }
+
+    fn visit_str<E>(self, email: &str) -> Result<Self::Value, E>
+    where
+            E: serde::de::Error, {
+            let (user, domain) = email.split_once('@').ok_or(
+                E::invalid_value(
+                    Unexpected::Str(email),
+                    &"string containing '@'"
+                )
+            )?;
+            let (user, domain): (String, String) = (
+                user.chars().rev().collect(),
+                domain.chars().rev().collect(),
+            );
+            return Ok(Self::Value {
+                user_reversed: user,
+                domain_reversed: domain,
+                email: email.to_string(),
+            });
+    }
+}
+
+impl<'de> Deserialize<'de> for EmailProtector
+{
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de> {
+        deserializer.deserialize_string(EmailProtectorVisitor)
+    }
+}
 
 #[derive(Serialize, Deserialize)]
 #[serde(default)]
 struct WCWPConfig {
     donate_url: String,
     source_url: String,
-    contact_email_user_reversed: String,
-    contact_email_domain_reversed: String,
-    commit: String,
+    contact_email: EmailProtector,
+    privacy_email: EmailProtector,
+
+    #[serde(skip_deserializing)]
+    commit: &'static str,
 }
 
 impl Default for WCWPConfig {
@@ -33,9 +121,9 @@ impl Default for WCWPConfig {
         Self {
             donate_url: Default::default(),
             source_url: Default::default(),
-            contact_email_user_reversed: Default::default(),
-            contact_email_domain_reversed: Default::default(),
-            commit: env!("VERGEN_GIT_SHA_SHORT").to_string(),
+            contact_email: Default::default(),
+            commit: env!("VERGEN_GIT_SHA_SHORT"),
+            privacy_email: Default::default(),
         }
     }
 }
@@ -43,6 +131,11 @@ impl Default for WCWPConfig {
 #[get("/")]
 async fn index(context: &State<WCWPConfig>) -> Template {
     Template::render("base_page", context.inner())
+}
+
+#[get("/privacy")]
+async fn privacy(context: &State<WCWPConfig>) -> Template {
+    Template::render("privacy", context.inner())
 }
 
 // This is the main function
@@ -85,7 +178,7 @@ async fn launch() -> Rocket<Build> {
     let wcwp_config: WCWPConfig = figment.extract().unwrap();
     
     rocket::custom(figment)
-        .mount("/", routes![index])
+        .mount("/", routes![index, privacy])
         .mount("/static", FileServer::from("static"))
         .attach(Template::fairing())
         .manage(wcwp_config)

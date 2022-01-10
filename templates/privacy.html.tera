@@ -98,8 +98,16 @@
     </dl>
     <h2>4. How To Contact Us</h2>
     <dl>
+        {%- if privacy_email and privacy_email.user_reversed and privacy_email.domain_reversed -%}
+        {%- set user = privacy_email.user_reversed -%}{%- set domain = privacy_email.domain_reversed -%}
+        {%- elif contact_email and contact_email.user_reversed and contact_email.domain_reversed -%}
+        {%- set user = contact_email.user_reversed -%}{%- set domain = contact_email.domain_reversed -%}
+        {%- endif -%}
         <dd>
-            If you have any further questions, concerns or claims about the data we collect, you can email us at <a href="mailto:{{ privacy_email }}">{{ privacy_email }}</a>.
+            If you have any further questions, concerns or claims about the data we collect, you can email us at 
+            {%- if user and domain %} <a class="protected-email" title="Enable JavaScript to show the email" data-user="{{ user }}" data-domain="{{ domain }}" data-set-text-to-email>{% raw %}{email protected}{% endraw %}</a>
+            {%- else -%}{%- raw %} {{ EMAIL MISSING }} {%- endraw -%}
+            {%- endif -%}.
         </dd>
     </dl>
     <br/>

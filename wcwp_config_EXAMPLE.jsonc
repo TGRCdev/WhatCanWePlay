@@ -1,5 +1,11 @@
 {
-    "source_url": "https://git.tgrc.dev/TGRCDev/WhatCanWePlay", // Provides a Source link in the footer
-    "contact_email": "contact@whatcanweplay.net", // Provides a Contact link in the footer
-    "donate_url": "https://paypal.me/TGRCDeveloper" // Provides a Donate link in the footer
+    // Provides a Contact link in the footer
+    "contact_email": "contact@whatcanweplay.net",
+    // Optional, specifically used in the '/privacy' page. If missing, the contact email will be used instead.
+    "privacy_email": "privacy@whatcanweplay.net", 
+
+    // Provides a Source link in the footer
+    "source_url": "https://git.tgrc.dev/TGRCDev/WhatCanWePlay",
+    // Optional, provides a Donate link in the footer
+    "donate_url": "https://paypal.me/TGRCDeveloper"
 }
