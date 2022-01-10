@@ -12,8 +12,11 @@ use rocket::{
 use rocket_dyn_templates::{
     Template,
 };
+use std::borrow::Cow;
 
 use serde::{ Serialize, Deserialize };
+
+const DEFAULT_CONFIG_PATH: &'static str = "wcwp_config.json";
 
 #[derive(Serialize, Deserialize)]
 #[serde(default)]
@@ -45,16 +48,25 @@ async fn index(context: &State<WCWPConfig>) -> Template {
 // This is the main function
 #[launch]
 async fn launch() -> Rocket<Build> {
-    let mut figment = Figment::from(rocket::Config::default())
-        .merge(Json::file("wcwp_config.json"))
-        .merge(Env::prefixed("WCWP_").global());
+    let mut figment = Figment::from(rocket::Config::default()) // Default Rocket config
+        .merge(Env::prefixed("WCWP_").global()); // Load any variable starting with WCWP_ into config
     
+    let mut config_path: Cow<str> = Cow::Borrowed(DEFAULT_CONFIG_PATH);
+    // Handle alternate config path
+    if let Ok(path) = figment.extract_inner("config_path")
+    {
+        config_path = path;
+    }
+    figment = figment
+        .join(Json::file(&*config_path)); // Env variables still take priority over config
+    
+    // Handle reversed contact email
     match figment
-        .find_value("contact_email")
+        .extract_inner::<Cow<str>>("contact_email")
     {
         Ok(email) => {
-            let email = email.into_string().unwrap();
-            let (user, domain) = email.split_once('@').unwrap();
+            let (user, domain) = email.split_once('@')
+                .expect(format!("CONFIG ERROR: 'contact_email' does not have a '@' sign, and is not a valid email. Please modify '{}' and re-run.", DEFAULT_CONFIG_PATH).as_str());
             let (user, domain): (String, String) = (
                 user.chars().rev().collect(),
                 domain.chars().rev().collect(),
