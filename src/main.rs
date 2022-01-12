@@ -65,6 +65,10 @@ async fn launch() -> Rocket<Build> {
     rocket::custom(figment)
         .mount("/", routes())
         .mount("/static", FileServer::from("static"))
+        
+        .mount("/api", api::routes())
+        .register("/api", catchers![api::minimal_catcher])
+
         .attach(Template::fairing())
         .manage(wcwp_config)
 }

@@ -9,8 +9,7 @@ license = "AGPL-3.0-or-later"
 [dependencies]
 exitcode = "1.1.2"
 figment = { version = "0.10.6", features = ["json"] }
-rocket = "0.5.0-rc.1"
-rocket_contrib = "0.4.10"
+rocket = { version = "0.5.0-rc.1", features = ["json"] }
 rocket_dyn_templates = { version = "0.1.0-rc.1", features = ["tera"] }
 serde = "1.0.133"
 
