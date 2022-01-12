@@ -13,11 +13,14 @@ use rocket_dyn_templates::{
 };
 use std::borrow::Cow;
 
-mod structs;
+pub mod structs;
 use crate::structs::WCWPConfig;
 
-mod routes;
+pub mod routes;
 use crate::routes::routes;
+
+pub mod serde_utils;
+pub mod api;
 
 const DEFAULT_CONFIG_PATH: &'static str = "wcwp_config.json";
 
