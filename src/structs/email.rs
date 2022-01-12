@@ -3,7 +3,7 @@ use serde::{
     de::{ Visitor, Unexpected },
 };
 
-#[derive(Serialize)]
+#[derive(Serialize, Default)]
 pub struct EmailProtector {
     pub user_reversed: String,
     pub domain_reversed: String,
@@ -14,7 +14,7 @@ pub struct EmailProtector {
 impl EmailProtector {
     pub fn new(email: &str) -> Self {
         let (user, domain) = email.split_once('@')
-            .expect(format!("Invalid email given to EmailProtector ({})", email).as_str());
+            .unwrap_or_else(|| panic!("Invalid email given to EmailProtector ({})", email));
         
         Self {
             user_reversed: user.chars().rev().collect(),
@@ -39,12 +39,6 @@ impl EmailProtector {
     }
 }
 
-impl Default for EmailProtector {
-    fn default() -> Self {
-        Self { user_reversed: Default::default(), domain_reversed: Default::default(), email: Default::default() }
-    }
-}
-
 struct EmailProtectorVisitor;
 
 impl Visitor<'_> for EmailProtectorVisitor {
@@ -57,7 +51,7 @@ impl Visitor<'_> for EmailProtectorVisitor {
     fn visit_str<E>(self, email: &str) -> Result<Self::Value, E>
     where
             E: serde::de::Error, {
-            let (user, domain) = email.split_once('@').ok_or(
+            let (user, domain) = email.split_once('@').ok_or_else( ||
                 E::invalid_value(
                     Unexpected::Str(email),
                     &"string containing '@'"
@@ -67,11 +61,12 @@ impl Visitor<'_> for EmailProtectorVisitor {
                 user.chars().rev().collect(),
                 domain.chars().rev().collect(),
             );
-            return Ok(Self::Value {
+            
+            Ok(Self::Value {
                 user_reversed: user,
                 domain_reversed: domain,
                 email: email.to_string(),
-            });
+            })
     }
 }
 

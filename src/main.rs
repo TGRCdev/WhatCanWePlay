@@ -19,10 +19,9 @@ use crate::structs::WCWPConfig;
 pub mod routes;
 use crate::routes::routes;
 
-pub mod serde_utils;
 pub mod api;
 
-const DEFAULT_CONFIG_PATH: &'static str = "wcwp_config.json";
+const DEFAULT_CONFIG_PATH: &str = "wcwp_config.json";
 
 // This is the main function
 #[launch]
@@ -45,7 +44,7 @@ async fn launch() -> Rocket<Build> {
     {
         Ok(email) => {
             let (user, domain) = email.split_once('@')
-                .expect(format!("CONFIG ERROR: 'contact_email' does not have a '@' sign, and is not a valid email. Please modify '{}' and re-run.", DEFAULT_CONFIG_PATH).as_str());
+                .unwrap_or_else(|| panic!("CONFIG ERROR: 'contact_email' does not have a '@' sign, and is not a valid email. Please modify '{}' and re-run.", DEFAULT_CONFIG_PATH));
             let (user, domain): (String, String) = (
                 user.chars().rev().collect(),
                 domain.chars().rev().collect(),
