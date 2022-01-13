@@ -1,14 +1,15 @@
 use serde::{ Serialize, Deserialize };
 
-use std::borrow::Cow;
+use crate::serde_utils::u64_or_parse_str;
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct SteamUser<'a> {
+pub struct SteamUser {
     #[serde(rename(deserialize = "steamid"))]
+    #[serde(deserialize_with = "u64_or_parse_str")]
     pub steam_id: u64,
 
     #[serde(rename(deserialize = "personaname"))]
-    pub screen_name: Cow<'a, str>,
+    pub screen_name: String,
 
     #[serde(rename(deserialize = "avatar"))]
     pub avatar_thumb: String,
@@ -20,5 +21,5 @@ pub struct SteamUser<'a> {
     pub visibility: i8,
 
     #[serde(rename(deserialize = "personastate"))]
-    pub online: bool,
+    pub user_state: i8,
 }

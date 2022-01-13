@@ -20,6 +20,9 @@ pub mod routes;
 use crate::routes::routes;
 
 pub mod api;
+use api::steam::SteamClient;
+
+pub mod serde_utils;
 
 const DEFAULT_CONFIG_PATH: &str = "wcwp_config.json";
 
@@ -62,10 +65,21 @@ async fn launch() -> Rocket<Build> {
 
     let wcwp_config: WCWPConfig = figment.extract().unwrap();
     
-    rocket::custom(figment)
+    let rocket = rocket::custom(figment);
+    let figment = rocket.figment();
+
+    let steam_client = SteamClient::new(figment).await;
+    if let Err(err) = steam_client {
+        println!("An error occurred while initializing the Steam request client:\n{:#?}", err);
+        std::process::exit(exitcode::CONFIG);
+    }
+    let steam_client = steam_client.unwrap();
+
+    rocket
         .mount("/", routes())
         .mount("/static", FileServer::from("static"))
         
+        .manage(steam_client)
         .mount("/api", api::routes())
         .register("/api", catchers![api::minimal_catcher])
 
