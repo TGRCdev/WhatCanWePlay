@@ -1,28 +1,20 @@
-use rocket::{
-    serde::{
-        json::{ Json, Value },
-        Serialize,
-    },
-    response::status::Custom,
-    State,
-    http::Status,
+use super::{ SteamID, SteamUser };
+use reqwest::{
+    StatusCode, Client, ClientBuilder,
+    Response,
 };
 use std::{
     ops::Deref,
     time::Duration,
     collections::HashMap,
+    borrow::Cow,
 };
-use reqwest::{ ClientBuilder, Client, StatusCode };
-use itertools::Itertools;
 use figment::Figment;
-
-use crate::structs::SteamUser;
-
-pub type SteamID = u64;
+use itertools::Itertools;
+use serde_json::Value;
 
 /// Various errors that can occur with the SteamClient
-#[derive(Debug, Serialize)]
-#[serde(tag = "type")]
+#[derive(Debug)]
 pub enum SteamError {
     /// The steam user with the given Steam id has an inaccessible games list
     NonPublicUser {
@@ -41,27 +33,17 @@ pub enum SteamError {
     /// Steam returned an unparseable response
     BadSteamResponse(String),
 
+    /// The request to Steam returned a 404/500/502/503/504 error code
+    SteamUnavailable,
+
     /// Steam had an unhandled error code response
     SteamErrorStatus{
         code: u16,
         message: String,
     },
-}
 
-impl From<SteamError> for Custom<Json<SteamError>>
-{
-    fn from(err: SteamError) -> Self {
-        match err {
-            SteamError::NonPublicUser{..} => Custom(Status::Forbidden, err.into()),
-            SteamError::BadSteamResponse(_) => Custom(Status::InternalServerError, err.into()),
-            SteamError::SteamErrorStatus{code, ..} => Custom(Status::new(code), err.into()),
-
-            // These won't ever be returned by the API
-            SteamError::MissingWebKey => Custom(Status::InternalServerError, err.into()),
-            SteamError::BadWebKey => Custom(Status::InternalServerError, err.into()),
-            SteamError::ClientBuildError(_) => Custom(Status::InternalServerError, err.into()),
-        }
-    }
+    /// User has their friends list set to private or friends-only
+    PrivateFriendsList,
 }
 
 impl From<reqwest::Error> for SteamError
@@ -74,8 +56,11 @@ impl From<reqwest::Error> for SteamError
     }
 }
 
+/// Result type for processing results from Steam API
+pub type SteamResult<T> = std::result::Result<T, SteamError>;
+
 /// Deref wrapper for a reqwest Client that provides shortcut functions to Steam API endpoints
-pub struct SteamClient(Client, String);
+pub struct SteamClient(Client, Cow<'static, str>);
 impl Deref for SteamClient {
     type Target = Client;
 
@@ -85,19 +70,13 @@ impl Deref for SteamClient {
     }
 }
 
-/// Result type for returning to the HTTP client
-pub type APIResult<T> = std::result::Result<Json<T>, Custom<Json<SteamError>>>;
-/// Result type for processing results from Steam API
-pub type SteamResult<T> = std::result::Result<T, SteamError>;
-
-
 impl SteamClient {
     /// Attempt to construct a new SteamClient from the given Figment config
     /// 
     /// Will return Err if the config doesn't contain a key named 'steam_webkey',
     /// or if the webkey fails to authenticate with Steam API
     pub async fn new(figment: &Figment) -> SteamResult<SteamClient> {
-        let webkey: String = figment
+        let webkey = figment
             .extract_inner("steam_webkey")
             .map_err(|_err| SteamError::MissingWebKey)?;
         // Webkey acquired
@@ -127,8 +106,32 @@ impl SteamClient {
         }
     }
 
+    async fn common_steam_errors(result: Response) -> SteamResult<Response>
+    {
+        if !result.status().is_success()
+        {
+            match result.status()
+            {
+                StatusCode::FORBIDDEN => return Err(SteamError::BadWebKey),
+                StatusCode::INTERNAL_SERVER_ERROR |
+                    StatusCode::BAD_GATEWAY |
+                    StatusCode::SERVICE_UNAVAILABLE |
+                    StatusCode::GATEWAY_TIMEOUT => return Err(SteamError::SteamUnavailable),
+                _ => {
+                    let code = result.status().as_u16();
+                    return Err(SteamError::SteamErrorStatus{
+                        code,
+                        message: result.text().await.unwrap_or(format!("Steam returned an empty response with code {}", code)),
+                    })
+                }
+            }
+        }
+
+        Ok(result)
+    }
+
     /// Fetch the Steam profiles of the given Steam IDs
-    pub async fn get_player_summaries(&self, steam_ids: &[SteamID]) -> std::result::Result<HashMap<SteamID, SteamUser>, SteamError> {
+    pub async fn get_player_summaries(&self, steam_ids: &[SteamID]) -> SteamResult<HashMap<SteamID, SteamUser>> {
         if steam_ids.is_empty()
         {
             return Ok(Default::default())
@@ -140,32 +143,12 @@ impl SteamClient {
             "https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002"
         )
         .query(&[
-            ("key", webkey),
-            ("steamids", &steam_ids),
-        ]).send().await;
+            ("key", webkey.as_ref()),
+            ("steamids", steam_ids.as_str()),
+            ("format", "json"),
+        ]).send().await?;
 
-        // Check the error code
-        let result = result.map_err(|err| {
-            if err.status() == Some(StatusCode::FORBIDDEN)
-            {
-                SteamError::BadWebKey
-            }
-            else {
-                SteamError::SteamErrorStatus{
-                    code: err.status().unwrap_or(StatusCode::INTERNAL_SERVER_ERROR).as_u16(),
-                    message: err.status().map(|e| e.to_string()).unwrap_or_default(),
-                }
-            }
-        })?;
-
-        if !result.status().is_success()
-        {
-            let code = result.status().as_u16();
-            return Err(SteamError::SteamErrorStatus{
-                code,
-                message: result.text().await.unwrap_or(format!("Steam returned an empty response with code {}", code)),
-            })
-        }
+        let result = Self::common_steam_errors(result).await?;
 
         // Try to deserialize
         let mut result_json: Value = result.json().await // Top-level value
@@ -182,22 +165,33 @@ impl SteamClient {
 
         Ok(player_map)
     }
-}
 
-#[post("/get_steam_users_info", data = "<steam_ids>")]
-pub async fn get_steam_users_info(steam_ids: Json<Vec<SteamID>>, client: &State<SteamClient>) -> APIResult<HashMap<SteamID, SteamUser>>
-{
-    if steam_ids.is_empty()
+    pub async fn get_friends_list(&self, user: SteamID) -> SteamResult<Vec<SteamID>>
     {
-        return Ok(HashMap::default().into());
-    }
+        let webkey = &self.1;
+        let user_str = user.to_string();
+        let result = self.get(
+            "http://api.steampowered.com/ISteamUser/GetFriendList/v0001/"
+        )
+        .query(&[
+            ("key", webkey.as_ref()),
+            ("steamid", user_str.as_str()),
+            ("relationship", "friend"),
+            ("format", "json"),
+        ]).send().await?;
 
-    let response = client.get_player_summaries(&steam_ids).await;
-    match response {
-        Ok(info) => Ok(info.into()),
-        Err(err) => {
-            error!("{:#?}", err);
-            Err(err.into())
-        }
+        let result = Self::common_steam_errors(result).await?;
+
+        let result: Value = result.json().await
+            .map_err(|e| SteamError::BadSteamResponse(e.to_string()))?;
+
+        let result = result["friendslist"]["friends"].as_object().ok_or(SteamError::PrivateFriendsList)?;
+
+        let result: Vec<SteamID> = result.into_iter()
+            .filter_map(|user| {
+                user.1["steamid"].as_str().and_then(|s| s.parse().ok())
+            }).collect();
+        
+        Ok(result)
     }
 }

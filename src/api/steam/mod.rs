@@ -1,6 +1,7 @@
-use serde::{ Serialize, Deserialize };
-
+use rocket::serde::{ Serialize, Deserialize };
 use crate::serde_utils::u64_or_parse_str;
+
+pub type SteamID = u64;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SteamUser {
@@ -23,3 +24,8 @@ pub struct SteamUser {
     #[serde(rename(deserialize = "personastate"))]
     pub user_state: i8,
 }
+
+pub mod frontend;
+pub mod backend;
+
+pub use frontend::routes;

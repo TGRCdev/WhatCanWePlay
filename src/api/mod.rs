@@ -7,9 +7,7 @@ pub mod steam;
 
 pub fn routes() -> Vec<Route>
 {
-    return routes![
-        steam::get_steam_users_info
-    ]
+    steam::routes()
 }
 
 // Minimize the amount of data sent from API errors
