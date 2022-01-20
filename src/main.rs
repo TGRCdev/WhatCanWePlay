@@ -42,24 +42,14 @@ async fn launch() -> Rocket<Build> {
         .join(Json::file(&*config_path)); // Env variables still take priority over config
 
     let wcwp_config: WCWPConfig = figment.extract().unwrap();
-    
-    let rocket = rocket::custom(figment);
-    let figment = rocket.figment();
 
-    let steam_client = SteamClient::new(figment).await;
-    if let Err(err) = steam_client {
-        println!("An error occurred while initializing the Steam request client:\n{:#?}", err);
-        std::process::exit(exitcode::CONFIG);
-    }
-    let steam_client = steam_client.unwrap();
-
-    rocket
+    rocket::custom(figment)
         .mount("/", routes())
         .mount("/static", FileServer::from("static"))
         
-        .manage(steam_client)
         .mount("/api", api::routes())
         .register("/api", catchers![api::minimal_catcher])
+        .attach(SteamClient::fairing())
 
         .attach(Template::fairing())
         .manage(wcwp_config)

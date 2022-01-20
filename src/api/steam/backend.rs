@@ -9,9 +9,12 @@ use std::{
     collections::HashMap,
     borrow::Cow,
 };
-use figment::Figment;
 use itertools::Itertools;
 use serde_json::Value;
+use rocket::{
+    fairing::{ self, Fairing, Kind, Info },
+    Rocket, Build,
+};
 
 /// Various errors that can occur with the SteamClient
 #[derive(Debug)]
@@ -70,17 +73,29 @@ impl Deref for SteamClient {
     }
 }
 
-impl SteamClient {
-    /// Attempt to construct a new SteamClient from the given Figment config
-    /// 
-    /// Will return Err if the config doesn't contain a key named 'steam_webkey',
-    /// or if the webkey fails to authenticate with Steam API
-    pub async fn new(figment: &Figment) -> SteamResult<SteamClient> {
-        let webkey = figment
-            .extract_inner("steam_webkey")
-            .map_err(|_err| SteamError::MissingWebKey)?;
-        // Webkey acquired
+#[derive(Debug, Default)]
+pub struct SteamClientFairing;
 
+#[rocket::async_trait]
+impl Fairing for SteamClientFairing {
+    fn info(&self) -> Info {
+        Info {
+            name: "Steam Backend Client Fairing",
+            kind: Kind::Ignite | Kind::Singleton,
+        }
+    }
+
+    /// Retrieves the Steam webkey under the key `steam_webkey`,
+    /// constructs a SteamClient, tests the webkey with the
+    /// Steam API and hands the SteamClient to Rocket
+    async fn on_ignite(&self, rocket: Rocket<Build>) -> fairing::Result {
+        let figment = rocket.figment();
+        let webkey = figment.extract_inner("steam_webkey");
+        if webkey.is_err()
+            { return Err(rocket) }
+        let webkey = webkey.unwrap();
+        // Webkey acquired
+        
         // Construct HTTP client for Steam API
         let client = ClientBuilder::new()
             .user_agent(concat!(
@@ -92,20 +107,24 @@ impl SteamClient {
             .brotli(true)
             .deflate(true)
             .build()
-            .map(|client| SteamClient(client, webkey))
-            .map_err(|err| SteamError::ClientBuildError(err.to_string()))?;
+            .map(|client| SteamClient(client, webkey));
+        if client.is_err()
+            { return Err(rocket) }
+        let client = client.unwrap();
         
         // Establish connection, test webkey
         let test = client.get_player_summaries(&[76561197960435530]).await; // Robin Walker
         match test {
-            Ok(_) => Ok(client),
-            Err(err) => {
-                error!("{:#?}", err);
-                Err(err)
-            },
+            Ok(_) => {
+                let rocket = rocket.manage(client);
+                Ok(rocket)
+            }
+            Err(_err) => Err(rocket),
         }
     }
+}
 
+impl SteamClient {
     async fn common_steam_errors(result: Response) -> SteamResult<Response>
     {
         if !result.status().is_success()
@@ -128,6 +147,12 @@ impl SteamClient {
         }
 
         Ok(result)
+    }
+
+    #[inline(always)]
+    pub fn fairing() -> SteamClientFairing
+    {
+        Default::default()
     }
 
     /// Fetch the Steam profiles of the given Steam IDs
