@@ -80,7 +80,7 @@ pub struct SteamClientFairing;
 impl Fairing for SteamClientFairing {
     fn info(&self) -> Info {
         Info {
-            name: "Steam Backend Client Fairing",
+            name: "Steam Client",
             kind: Kind::Ignite | Kind::Singleton,
         }
     }
@@ -89,11 +89,22 @@ impl Fairing for SteamClientFairing {
     /// constructs a SteamClient, tests the webkey with the
     /// Steam API and hands the SteamClient to Rocket
     async fn on_ignite(&self, rocket: Rocket<Build>) -> fairing::Result {
+        use rocket::{
+            yansi::Paint,
+            log::PaintExt,
+        };
+
+        info!("{}{}:", Paint::emoji("💨 "), Paint::magenta("Steam Client"));
         let figment = rocket.figment();
         let webkey = figment.extract_inner("steam_webkey");
-        if webkey.is_err()
-            { return Err(rocket) }
+        if let Err(err) = webkey
+        {
+            info_!("Found webkey: {}", Paint::red('❌'));
+            error!("Failed to load the Steam webkey: {}", err);
+            return Err(rocket)
+        }
         let webkey = webkey.unwrap();
+        info_!("Found webkey: {}", Paint::green('✔'));
         // Webkey acquired
         
         // Construct HTTP client for Steam API
@@ -108,18 +119,28 @@ impl Fairing for SteamClientFairing {
             .deflate(true)
             .build()
             .map(|client| SteamClient(client, webkey));
-        if client.is_err()
-            { return Err(rocket) }
+        if let Err(err) = client
+        {
+            info_!("Constructed Steam Client: {}", Paint::red('❌'));
+            error!("Failed to initialize the SteamClient: {}", err);
+            return Err(rocket)
+        }
         let client = client.unwrap();
+        info_!("Constructed Steam Client: {}", Paint::green('✔'));
         
         // Establish connection, test webkey
         let test = client.get_player_summaries(&[76561197960435530]).await; // Robin Walker
         match test {
             Ok(_) => {
                 let rocket = rocket.manage(client);
+                info_!("Webkey test: {}", Paint::green('✔'));
                 Ok(rocket)
             }
-            Err(_err) => Err(rocket),
+            Err(err) => {
+                info_!("Webkey test: {}", Paint::red('❌'));
+                error!("Steam webkey test failed: {:?}", err);
+                Err(rocket)
+            },
         }
     }
 }
