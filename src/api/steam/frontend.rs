@@ -1,10 +1,11 @@
 use super::{
     SteamID, SteamUser,
     backend::{ SteamError, SteamClient },
+    GetFriendsResponse,
 };
 use rocket::{
     serde::{
-        Serialize,
+        Serialize, Deserialize,
         json::Json,
     },
     response::Responder,
@@ -92,9 +93,43 @@ pub async fn get_steam_users_info(steam_ids: Json<Vec<SteamID>>, client: &State<
     }
 }
 
+#[derive(Deserialize)]
+#[serde(untagged)]
+pub enum GetFriendsRequest {
+    Type1(SteamID),
+    Type2 {
+        steam_id: SteamID,
+        #[serde(default)]
+        get_info: bool,
+    }
+}
+
+#[post("/get_friends_list", data = "<request>")]
+pub async fn get_friends_list(request: Json<GetFriendsRequest>, client: &State<SteamClient>) -> APIResult<GetFriendsResponse>
+{
+    let steam_id: u64;
+    let get_info: bool;
+
+    match *request {
+        GetFriendsRequest::Type1(id) => {
+            steam_id = id;
+            get_info = false;
+        },
+        GetFriendsRequest::Type2 { steam_id: id, get_info: info } => {
+            steam_id = id;
+            get_info = info;
+        }
+    }
+
+    let result = client.get_friends_list(steam_id, get_info).await?;
+
+    Ok(result.into())
+}
+
 pub fn routes() -> Vec<Route>
 {
     routes![
-        get_steam_users_info
+        get_steam_users_info,
+        get_friends_list,
     ]
 }

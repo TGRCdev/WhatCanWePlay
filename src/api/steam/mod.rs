@@ -25,6 +25,20 @@ pub struct SteamUser {
     pub user_state: i8,
 }
 
+pub mod responses {
+    use rocket::serde::Serialize;
+    use std::collections::HashMap;
+    use super::*;
+
+    #[derive(Serialize)]
+    #[serde(untagged)]
+    pub enum GetFriendsResponse {
+        Type1(Vec<SteamID>),
+        Type2(HashMap<SteamID, SteamUser>),
+    }
+}
+pub use responses::*;
+
 pub mod frontend;
 pub mod backend;
 

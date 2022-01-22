@@ -5,6 +5,7 @@ use rocket::{
         Figment,
         providers::{ Json, Format, Env },
     },
+    fairing::AdHoc,
     fs::FileServer,
     Rocket, Build,
 };
@@ -41,16 +42,14 @@ async fn launch() -> Rocket<Build> {
     figment = figment
         .join(Json::file(&*config_path)); // Env variables still take priority over config
 
-    let wcwp_config: WCWPConfig = figment.extract().unwrap();
-
     rocket::custom(figment)
         .mount("/", routes())
         .mount("/static", FileServer::from("static"))
+        .attach(AdHoc::config::<WCWPConfig>())
         
         .mount("/api", api::routes())
         .register("/api", catchers![api::minimal_catcher])
         .attach(SteamClient::fairing())
 
         .attach(Template::fairing())
-        .manage(wcwp_config)
 }

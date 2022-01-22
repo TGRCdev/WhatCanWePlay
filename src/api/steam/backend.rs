@@ -1,4 +1,7 @@
-use super::{ SteamID, SteamUser };
+use super::{ 
+    SteamID, SteamUser,
+    GetFriendsResponse
+};
 use reqwest::{
     StatusCode, Client, ClientBuilder,
     Response,
@@ -90,7 +93,7 @@ impl Fairing for SteamClientFairing {
     /// Steam API and hands the SteamClient to Rocket
     async fn on_ignite(&self, rocket: Rocket<Build>) -> fairing::Result {
         use rocket::{
-            yansi::Paint,
+            yansi::{ Paint, Color },
             log::PaintExt,
         };
 
@@ -99,12 +102,12 @@ impl Fairing for SteamClientFairing {
         let webkey = figment.extract_inner("steam_webkey");
         if let Err(err) = webkey
         {
-            info_!("Found webkey: {}", Paint::red('❌'));
+            info_!("Found webkey: {}{}", Paint::emoji("❌ ").fg(Color::Red), Paint::red("Fail"));
             error!("Failed to load the Steam webkey: {}", err);
             return Err(rocket)
         }
         let webkey = webkey.unwrap();
-        info_!("Found webkey: {}", Paint::green('✔'));
+        info_!("Found webkey: {}{}", Paint::emoji("✔ ").fg(Color::Green), Paint::green("Pass"));
         // Webkey acquired
         
         // Construct HTTP client for Steam API
@@ -121,26 +124,39 @@ impl Fairing for SteamClientFairing {
             .map(|client| SteamClient(client, webkey));
         if let Err(err) = client
         {
-            info_!("Constructed Steam Client: {}", Paint::red('❌'));
+            info_!("Constructed Steam Client: {}{}", Paint::emoji("❌ ").fg(Color::Red), Paint::red("Fail"));
             error!("Failed to initialize the SteamClient: {}", err);
             return Err(rocket)
         }
         let client = client.unwrap();
-        info_!("Constructed Steam Client: {}", Paint::green('✔'));
+        info_!("Constructed Steam Client: {}{}", Paint::emoji("✔ ").fg(Color::Green), Paint::green("Pass"));
+
+        let skip_steam_test = figment.extract_inner("skip_steam_test").unwrap_or_else(|_err| {
+            warn!("skip_steam_test failed to deserialize properly, defaulting to 'false'");
+            warn!("Error: {}", _err);
+            false
+        });
         
         // Establish connection, test webkey
-        let test = client.get_player_summaries(&[76561197960435530]).await; // Robin Walker
-        match test {
-            Ok(_) => {
-                let rocket = rocket.manage(client);
-                info_!("Webkey test: {}", Paint::green('✔'));
-                Ok(rocket)
+        if skip_steam_test
+        {
+            info_!("Webkey test: {}{}", Paint::emoji("⏭ ").fg(Color::Yellow), Paint::yellow("Skip"));
+            Ok(rocket.manage(client))
+        }
+        else
+        {
+            let test = client.get_player_summaries(&[76561197960435530]).await; // Robin Walker
+            match test {
+                Ok(_) => {
+                    info_!("Webkey test: {}{}", Paint::emoji("✔ ").fg(Color::Green), Paint::green("Pass"));
+                    Ok(rocket.manage(client))
+                }
+                Err(err) => {
+                    info_!("Webkey test: {}{}", Paint::emoji("❌ ").fg(Color::Red), Paint::red("Fail"));
+                    error!("Steam webkey test failed: {:?}", err);
+                    Err(rocket)
+                },
             }
-            Err(err) => {
-                info_!("Webkey test: {}", Paint::red('❌'));
-                error!("Steam webkey test failed: {:?}", err);
-                Err(rocket)
-            },
         }
     }
 }
@@ -212,7 +228,7 @@ impl SteamClient {
         Ok(player_map)
     }
 
-    pub async fn get_friends_list(&self, user: SteamID) -> SteamResult<Vec<SteamID>>
+    pub async fn get_friends_list(&self, user: SteamID, get_info: bool) -> SteamResult<GetFriendsResponse>
     {
         let webkey = &self.1;
         let user_str = user.to_string();
@@ -231,13 +247,20 @@ impl SteamClient {
         let result: Value = result.json().await
             .map_err(|e| SteamError::BadSteamResponse(e.to_string()))?;
 
-        let result = result["friendslist"]["friends"].as_object().ok_or(SteamError::PrivateFriendsList)?;
+        let result = result["friendslist"]["friends"].as_array().ok_or(SteamError::PrivateFriendsList)?;
 
-        let result: Vec<SteamID> = result.into_iter()
+        let result: Vec<SteamID> = result.iter()
             .filter_map(|user| {
-                user.1["steamid"].as_str().and_then(|s| s.parse().ok())
+                user["steamid"].as_str().and_then(|s| s.parse().ok())
             }).collect();
         
-        Ok(result)
+        if !get_info {
+            Ok(GetFriendsResponse::Type1(result))
+        }
+        else {
+            Ok(GetFriendsResponse::Type2(
+                self.get_player_summaries(&result).await?
+            ))
+        }
     }
 }
