@@ -13,7 +13,7 @@
         </title>
 
         {% block styles -%}
-        <link rel="stylesheet" href="static/styles/default_dark.css" />
+        <link rel="stylesheet" href="/static/styles/default_dark.css" />
         {%- endblock -%} {#- styles #}
 
         {%- block scripts -%}

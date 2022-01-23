@@ -6,13 +6,17 @@ use super::{
 use rocket::{
     serde::{
         Serialize, Deserialize,
-        json::Json,
+        json::{ Json },
     },
     response::Responder,
     http::Status,
     State, Route,
 };
 use std::collections::HashMap;
+use crate::api::testing::{
+    api_test, APITestInfo,
+    APITestArgument, APITestArgType::*
+};
 
 // Errors returned from the WCWP Steam API
 #[derive(Debug, Serialize)]
@@ -101,15 +105,14 @@ pub enum GetFriendsRequest {
         steam_id: SteamID,
         #[serde(default)]
         get_info: bool,
-    }
+    },
 }
 
 #[post("/get_friends_list", data = "<request>")]
 pub async fn get_friends_list(request: Json<GetFriendsRequest>, client: &State<SteamClient>) -> APIResult<GetFriendsResponse>
 {
-    let steam_id: u64;
-    let get_info: bool;
-
+    let steam_id;
+    let get_info;
     match *request {
         GetFriendsRequest::Type1(id) => {
             steam_id = id;
@@ -125,11 +128,31 @@ pub async fn get_friends_list(request: Json<GetFriendsRequest>, client: &State<S
 
     Ok(result.into())
 }
+api_test!(
+    get_friends_list_test,
+    "/get_friends_list",
+    APITestInfo {
+        func_name: "get_friends_list",
+        func_args: vec![
+            APITestArgument {
+                name: "steam_id",
+                arg_type: Int,
+                default: None,
+            },
+            APITestArgument {
+                name: "get_info",
+                arg_type: Bool,
+                default: None,
+            }
+        ]
+    }
+);
 
 pub fn routes() -> Vec<Route>
 {
     routes![
         get_steam_users_info,
         get_friends_list,
+        get_friends_list_test,
     ]
 }

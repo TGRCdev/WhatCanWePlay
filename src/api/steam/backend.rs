@@ -145,7 +145,7 @@ impl Fairing for SteamClientFairing {
         }
         else
         {
-            let test = client.get_player_summaries(&[76561197960435530]).await; // Robin Walker
+            let test = client.get_player_summaries(&[76561197960435530.into()]).await; // Robin Walker
             match test {
                 Ok(_) => {
                     info_!("Webkey test: {}{}", Paint::emoji("✔ ").fg(Color::Green), Paint::green("Pass"));

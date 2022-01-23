@@ -1,24 +1,24 @@
 {% extends "base_page" %}
 
-{% block title %}{{ api_function_name }} {{ api_version }}{% endblock %}
+{% block title %}{{ api_function_name }}{% endblock %}
 
 {% block scripts %}
 {{ super() }}
 <script>
-    param_info = JSON.parse('{{ api_function_params|safe }}');
+    param_info = {{ api_function_params | json_encode() | safe }}
 </script>
-<script src="static/scripts/fetch_timeout.js"></script>
-<script src="static/scripts/api_test.js"></script>
+<script src="/static/scripts/fetch_timeout.js"></script>
+<script src="/static/scripts/api_test.js"></script>
 {% endblock %}
 
 {% block styles %}
 {{ super() }}
-<link rel="stylesheet" href="static/styles/api_test.css" />
+<link rel="stylesheet" href="/static/styles/api_test.css" />
 {% endblock %}
 
 {% block content %}
 <div id="test">
-    <h1>API Test: <span id="endpoint-name">{{ api_function_name }}</span> ({{ api_version }})</h1>
+    <h1>API Test: <span id="endpoint-name">{{ api_function_name }}</span></h1>
     <div id="tabbox">
         <div id="tabs">
             <button id="fields-tab" class="tab selected" onclick="showTab('fields')">Fields</button>

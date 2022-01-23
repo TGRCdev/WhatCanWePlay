@@ -1,5 +1,6 @@
 use serde::{
     Deserializer, Deserialize,
+    Serializer,
     de::{ Error, Unexpected },
 };
 use serde_json::Value;
@@ -19,22 +20,22 @@ where
             &"u64",
         )),
         Value::Number(val) => {
-            if let Some(val) = val.as_f64()
-            {
-                Err(Error::invalid_type(
-                    Unexpected::Float(val),
-                    &"u64"
-                ))
-            }
-            else if let Some(val) = val.as_u64()
+            if let Some(val) = val.as_u64()
             {
                 Ok(val)
             }
-            else
+            else if let Some(val) = val.as_i64()
             {
-                let val = val.as_i64().unwrap();
                 Err(Error::invalid_type(
                     Unexpected::Signed(val),
+                    &"u64"
+                ))
+            }
+            else
+            {
+                let val = val.as_f64().unwrap();
+                Err(Error::invalid_type(
+                    Unexpected::Float(val),
                     &"u64"
                 ))
             }
@@ -60,4 +61,13 @@ where
             &"u64",
         )),
     }
+}
+
+pub fn value_to_string<T, S>(value: &T, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+    T: ToString,
+{
+    let valstr = value.to_string();
+    serializer.serialize_str(valstr.as_str())
 }
