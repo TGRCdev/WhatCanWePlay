@@ -136,10 +136,16 @@ impl Fairing for SteamClientFairing {
         let client = client.unwrap();
         info_!("Constructed Steam Client: {}{}", Paint::emoji("✔ ").fg(Color::Green), Paint::green("Pass"));
 
-        let skip_steam_test = figment.extract_inner("skip_steam_test").unwrap_or_else(|_err| {
-            warn!("skip_steam_test failed to deserialize properly, defaulting to 'false'");
-            warn!("Error: {}", _err);
-            false
+        let skip_steam_test = figment.extract_inner("skip_steam_test").unwrap_or_else(|err| {
+            match err.kind {
+                figment::error::Kind::MissingField(_) => false,
+                _ => {
+                    warn!("skip_steam_test failed to deserialize properly, defaulting to 'false'");
+                    warn!("Error: {}", err);
+                    false
+                }
+            }
+            
         });
         
         // Establish connection, test webkey

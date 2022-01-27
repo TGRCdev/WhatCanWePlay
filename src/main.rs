@@ -15,7 +15,7 @@ use rocket_dyn_templates::{
 use std::borrow::Cow;
 
 pub mod structs;
-use crate::structs::WCWPConfig;
+use crate::structs::{ WCWPConfig, CachedFileServer };
 
 pub mod routes;
 use crate::routes::routes;
@@ -33,7 +33,7 @@ async fn launch() -> Rocket<Build> {
     let mut figment = Figment::from(rocket::Config::default()) // Default Rocket config
         .merge(Env::prefixed("WCWP_").global()); // Load any variable starting with WCWP_ into config
     
-    let mut config_path: Cow<str> = Cow::Borrowed(DEFAULT_CONFIG_PATH);
+    let mut config_path = Cow::Borrowed(DEFAULT_CONFIG_PATH);
     // Handle alternate config path
     if let Ok(path) = figment.extract_inner("config_path")
     {
@@ -44,7 +44,7 @@ async fn launch() -> Rocket<Build> {
 
     rocket::custom(figment)
         .mount("/", routes())
-        .mount("/static", FileServer::from("static"))
+        .mount("/static", CachedFileServer::from("static"))
         .attach(AdHoc::config::<WCWPConfig>())
         
         .mount("/api", api::routes())

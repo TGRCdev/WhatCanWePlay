@@ -114,6 +114,19 @@ pub async fn get_steam_users_info(steam_ids: Json<GetSteamUsersInfoRequest>, cli
     }
 }
 
+#[post("/get_steam_user_info", data = "<steam_id>")]
+pub async fn get_steam_user_info(steam_id: Json<SteamID>, client: &State<SteamClient>) -> APIResult<SteamUser>
+{
+    let response = client.get_player_summary(&steam_id).await;
+    match response {
+        Ok(steam_user) => Ok(steam_user.into()),
+        Err(err) => {
+            error!("{:#?}", err);
+            Err(err.into())
+        }
+    }
+}
+
 #[post("/get_friends_list", data = "<request>")]
 pub async fn get_friends_list(request: Json<GetFriendsRequest>, client: &State<SteamClient>) -> APIResult<GetFriendsResponse>
 {
@@ -182,6 +195,7 @@ pub fn routes() -> Vec<Route>
 {
     routes![
         get_steam_users_info,
+        get_steam_user_info,
         get_friends_list,
         interpret_id_input,
     ]

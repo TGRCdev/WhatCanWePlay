@@ -1,4 +1,5 @@
 use rocket::serde::{ Serialize, Deserialize };
+use serde_repr::{ Serialize_repr, Deserialize_repr };
 use crate::serde_utils::{
     u64_or_parse_str, value_to_string,
 };
@@ -41,6 +42,28 @@ impl FromStr for SteamID {
     }
 }
 
+#[derive(Debug, PartialEq, Serialize_repr, Deserialize_repr)]
+#[repr(u8)]
+pub enum SteamVisibility {
+    Private = 1,
+    FriendsOnly = 2,
+    FriendsOfFriends = 3,
+    UsersOnly = 4,
+    Public = 5,
+}
+
+#[derive(Debug, PartialEq, Serialize_repr, Deserialize_repr)]
+#[repr(u8)]
+pub enum SteamUserState {
+    Offline = 0,
+    Online = 1,
+    Busy = 2,
+    Away = 3,
+    Snooze = 4,
+    LookingToTrade = 5,
+    LookingToPlay = 6,
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct SteamUser {
     #[serde(rename(deserialize = "steamid"))]
@@ -56,10 +79,10 @@ pub struct SteamUser {
     pub avatar: String,
 
     #[serde(rename(deserialize = "communityvisibilitystate"))]
-    pub visibility: i8,
+    pub visibility: SteamVisibility,
 
     #[serde(rename(deserialize = "personastate"))]
-    pub user_state: i8,
+    pub user_state: SteamUserState,
 }
 
 pub mod requests {
