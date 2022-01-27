@@ -4,10 +4,10 @@ html {
     font-family: "Trebuchet MS", Helvetica, sans-serif;
 }
 a:link {
-    color: gray;
+    color: #aaa;
 }
 a:visited {
-    color: gray;
+    color: #aaa;
 }
 html, body {
     min-height: 100%;

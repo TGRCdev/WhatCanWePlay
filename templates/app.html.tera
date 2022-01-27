@@ -28,10 +28,10 @@
 <div id="app" class="on-users">
     <div id="users">
         <div id="main-user" class="user list-item {% if not logged_in %}not-signed-in-hide{% endif %}">
-            <img class="user-img{% if not logged_in %} offline{% endif %}" src="/static/images/default_avatar.png"/>
-            <div class="user-name-div">
+            <img id="main-user-img" class="user-img{% if not logged_in %} offline{% endif %}" src="/static/images/default_avatar.png"/>
+            <div class="user-name">
                 {% if logged_in %}
-                <div id="user-name"></div>
+                <span id="main-user-name"></span>
                 <a style="display:block" href="/logout">Sign out</a>
                 {% else %}
                 <em>Not signed in</em>

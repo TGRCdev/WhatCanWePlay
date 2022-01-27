@@ -11,6 +11,7 @@ function setupLoggedOutVariables() {
 }
 
 window.addEventListener("load", (event) => {
+    window.localStorage.clear()
     setupLoggedOutVariables()
 })
 
@@ -26,12 +27,13 @@ async function submitId() {
             mode: "same-origin",
             body: id,
         })
-        console.log(response)
 
         switch(response.status) {
             case 200: {
                 const json = await response.json()
-                window.localStorage.setItem("steam_info", json)
+                window.localStorage.setItem("steam_id", json["steam_id"])
+                window.localStorage.setItem("screen_name", json["screen_name"])
+                window.localStorage.setItem("avatar", json["avatar"])
                 document.cookie = "loggedIn=true; samesite=Strict; max-age=31536000"
                 location.reload()
                 break

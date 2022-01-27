@@ -162,7 +162,7 @@ html, body {
     height: 56px;
 }
 
-.user-name-div {
+.user-name {
     padding-left:10px;
     padding-right:10px;
     overflow-wrap:anywhere;
@@ -178,12 +178,16 @@ html, body {
     cursor: pointer;
 }
 
-#main-user>.user-img {
-    border-color: greenyellow;
+.user-img.ingame, #main-user>.user-img.ingame {
+    border-color: #90e412;
 }
 
-.user-img.offline, #main-user>.user-img.offline {
-    border-color: #434343
+.user-img.online, #main-user>.user-img.online {
+    border-color: #0870b5;
+}
+
+.user-img, #main-user>.user-img {
+    border-color: #434343;
 }
 
 .user-img {
