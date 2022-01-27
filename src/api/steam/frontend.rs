@@ -45,6 +45,9 @@ pub enum APIError {
 
     /// The request to Steam returned a 404/500/502/503/504 error code
     SteamUnavailable,
+
+    // The given vanity url could not be resolved
+    VanityUrlNotFound,
 }
 
 impl From<SteamError> for APIError
@@ -59,6 +62,7 @@ impl From<SteamError> for APIError
             SteamError::SteamUnavailable => Self::SteamUnavailable,
             SteamError::SteamErrorStatus {..} => APIError::SteamErrorStatus,
             SteamError::PrivateFriendsList => Self::PrivateFriendsList,
+            SteamError::VanityUrlNotFound => Self::VanityUrlNotFound,
         }
     }
 }
@@ -66,13 +70,14 @@ impl From<SteamError> for APIError
 impl<'r, 'o: 'r> Responder<'r, 'o> for APIError {
     fn respond_to(self, request: &'r rocket::Request<'_>) -> rocket::response::Result<'o> {
         match self {
-            APIError::NonPublicUser {..}        =>   (Status::Forbidden, Json(self)).respond_to(request),
-            APIError::MissingWebKey             =>   (Status::InternalServerError, Json(self)).respond_to(request),
-            APIError::BadWebKey                 =>   (Status::InternalServerError, Json(self)).respond_to(request),
-            APIError::BadSteamResponse          =>   (Status::InternalServerError, Json(self)).respond_to(request),
-            APIError::SteamErrorStatus          =>   (Status::InternalServerError, Json(self)).respond_to(request),
-            APIError::PrivateFriendsList        =>   (Status::Forbidden, Json(self)).respond_to(request),
-            APIError::SteamUnavailable          =>   (Status::InternalServerError, Json(self)).respond_to(request),
+            APIError::NonPublicUser {..}        =>  (Status::Forbidden, Json(self)).respond_to(request),
+            APIError::MissingWebKey             =>  (Status::InternalServerError, Json(self)).respond_to(request),
+            APIError::BadWebKey                 =>  (Status::InternalServerError, Json(self)).respond_to(request),
+            APIError::BadSteamResponse          =>  (Status::InternalServerError, Json(self)).respond_to(request),
+            APIError::SteamErrorStatus          =>  (Status::InternalServerError, Json(self)).respond_to(request),
+            APIError::PrivateFriendsList        =>  (Status::Forbidden, Json(self)).respond_to(request),
+            APIError::SteamUnavailable          =>  (Status::InternalServerError, Json(self)).respond_to(request),
+            APIError::VanityUrlNotFound         =>  (Status::NotFound, Json(self)).respond_to(request),
         }
     }
 }

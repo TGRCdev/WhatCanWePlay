@@ -1,6 +1,8 @@
 use rocket::{
     Route, State,
     get,
+    form::Form,
+    response::Redirect,
 };
 use rocket_dyn_templates::Template;
 
@@ -9,7 +11,7 @@ use crate::WCWPConfig;
 #[get("/")]
 #[inline(always)]
 async fn index(context: &State<WCWPConfig>) -> Template {
-    Template::render("base_page", context.inner())
+    Template::render("home", context.inner())
 }
 
 #[get("/privacy")]

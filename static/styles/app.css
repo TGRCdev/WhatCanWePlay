@@ -293,6 +293,11 @@ html, body {
     font-size: larger;
 }
 
+#noscript {
+    text-align: center;
+    background-color: red;
+}
+
 /* Desktop Overrides */
 @media (min-width: 601px) {
     #app {

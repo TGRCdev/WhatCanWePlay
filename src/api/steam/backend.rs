@@ -50,6 +50,9 @@ pub enum SteamError {
 
     /// User has their friends list set to private or friends-only
     PrivateFriendsList,
+    
+    // The given vanity url could not be resolved
+    VanityUrlNotFound,
 }
 
 impl From<reqwest::Error> for SteamError
@@ -262,5 +265,11 @@ impl SteamClient {
                 self.get_player_summaries(&result).await?
             ))
         }
+    }
+
+    pub async fn resolve_vanity_url(&self, vanityurl: String) -> SteamResult<SteamUser>
+    {
+        let webkey = &self.1;
+        todo!();
     }
 }
