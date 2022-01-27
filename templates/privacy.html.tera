@@ -57,7 +57,7 @@
             <br/>
             Your Steam information is encrypted and kept on your browser. We fetch your friends' information from Steam when you use the app. We never store personal information on our servers.<br/>
             <br/>
-            If you want to stop providing WhatCanWePlay with your Steam information, you can click "Sign Out" on the web app interface, or <a href="steam_logout">click here</a>. Both methods will delete the cookie from your browser and prevent us from using your information any further. You can also manually delete the cookie, labeled "steam_info", using methods provided by your browser.
+            If you want to stop providing WhatCanWePlay with your Steam information, you can click "Sign Out" on the web app interface, or <a href="/logout">click here</a>. Both methods will delete the cookie from your browser and prevent us from using your information any further. You can also manually delete the cookie, labeled "steam_info", using methods provided by your browser.
         </dd>
         <dt><h3>2.2 Game Info</h3></dt>
         <dd>

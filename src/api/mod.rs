@@ -4,7 +4,6 @@ use rocket::{
 };
 
 pub mod steam;
-pub mod testing;
 
 pub fn routes() -> Vec<Route>
 {

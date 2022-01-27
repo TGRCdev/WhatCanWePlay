@@ -1,7 +1,8 @@
 use super::{
     SteamID, SteamUser,
     backend::{ SteamError, SteamClient },
-    GetFriendsResponse,
+    responses::*,
+    requests::*,
 };
 use rocket::{
     serde::{
@@ -12,12 +13,7 @@ use rocket::{
     http::Status,
     State, Route,
 };
-use std::collections::HashMap;
-use crate::api::testing::{
-    api_test, APITestInfo,
-    APITestArgument, APITestArgType::*
-};
-use core::slice::from_ref;
+use std::{collections::HashMap};
 
 // Errors returned from the WCWP Steam API
 #[derive(Debug, Serialize)]
@@ -48,6 +44,12 @@ pub enum APIError {
 
     // The given vanity url could not be resolved
     VanityUrlNotFound,
+
+    // The ID string the user gave can't be interpreted into a Steam ID
+    UnresolvableID,
+
+    // The given Steam ID did not return a valid user
+    UserNotFound,
 }
 
 impl From<SteamError> for APIError
@@ -63,6 +65,7 @@ impl From<SteamError> for APIError
             SteamError::SteamErrorStatus {..} => APIError::SteamErrorStatus,
             SteamError::PrivateFriendsList => Self::PrivateFriendsList,
             SteamError::VanityUrlNotFound => Self::VanityUrlNotFound,
+            SteamError::UserNotFound => Self::UserNotFound,
         }
     }
 }
@@ -78,6 +81,8 @@ impl<'r, 'o: 'r> Responder<'r, 'o> for APIError {
             APIError::PrivateFriendsList        =>  (Status::Forbidden, Json(self)).respond_to(request),
             APIError::SteamUnavailable          =>  (Status::InternalServerError, Json(self)).respond_to(request),
             APIError::VanityUrlNotFound         =>  (Status::NotFound, Json(self)).respond_to(request),
+            APIError::UserNotFound              =>  (Status::NotFound, Json(self)).respond_to(request),
+            APIError::UnresolvableID            =>  (Status::NotFound, Json(self)).respond_to(request),
         }
     }
 }
@@ -85,40 +90,13 @@ impl<'r, 'o: 'r> Responder<'r, 'o> for APIError {
 /// Result type for returning to the HTTP client
 pub type APIResult<T> = std::result::Result<Json<T>, APIError>;
 
-pub mod requests {
-    use serde::Deserialize;
-    use super::super::SteamID;
-
-    #[derive(Deserialize)]
-    #[serde(untagged)]
-    pub enum GetSteamUsersInfoRequest {
-        Single(SteamID),
-        Vec(Vec<SteamID>),
-        Object {
-            steam_ids: Vec<SteamID>,
-        }
-    }
-
-    #[derive(Deserialize)]
-    #[serde(untagged)]
-    pub enum GetFriendsRequest {
-        SteamID(SteamID),
-        Object {
-            steam_id: SteamID,
-            #[serde(default)]
-            get_info: bool,
-        },
-    }
-}
-pub use requests::*;
-
 #[post("/get_steam_users_info", data = "<steam_ids>")]
 pub async fn get_steam_users_info(steam_ids: Json<GetSteamUsersInfoRequest>, client: &State<SteamClient>) -> APIResult<HashMap<SteamID, SteamUser>>
 {
     let steam_ids = match &*steam_ids {
         GetSteamUsersInfoRequest::Vec(steam_ids) => steam_ids,
         GetSteamUsersInfoRequest::Object { steam_ids } => steam_ids,
-        GetSteamUsersInfoRequest::Single(steam_id) => from_ref(steam_id),
+        GetSteamUsersInfoRequest::Single(steam_id) => core::slice::from_ref(steam_id),
     };
 
     if steam_ids.is_empty()
@@ -135,20 +113,6 @@ pub async fn get_steam_users_info(steam_ids: Json<GetSteamUsersInfoRequest>, cli
         }
     }
 }
-api_test!(
-    get_steam_users_info_test,
-    "/get_steam_users_info",
-    APITestInfo {
-        func_name: "get_steam_users_info",
-        func_args: vec![
-            APITestArgument {
-                name: "steam_ids",
-                arg_type: CSLOfInt,
-                default: None,
-            }
-        ]
-    }
-);
 
 #[post("/get_friends_list", data = "<request>")]
 pub async fn get_friends_list(request: Json<GetFriendsRequest>, client: &State<SteamClient>) -> APIResult<GetFriendsResponse>
@@ -166,36 +130,59 @@ pub async fn get_friends_list(request: Json<GetFriendsRequest>, client: &State<S
         }
     }
 
-    let result = client.get_friends_list(steam_id, get_info).await?;
+    let result = client.get_friends_list(steam_id).await?;
 
-    Ok(result.into())
-}
-api_test!(
-    get_friends_list_test,
-    "/get_friends_list",
-    APITestInfo {
-        func_name: "get_friends_list",
-        func_args: vec![
-            APITestArgument {
-                name: "steam_id",
-                arg_type: Int,
-                default: None,
-            },
-            APITestArgument {
-                name: "get_info",
-                arg_type: Bool,
-                default: None,
-            }
-        ]
+    if !get_info
+    {
+        Ok(GetFriendsResponse::SteamIDs(result).into())
     }
-);
+    else
+    {
+        Ok(GetFriendsResponse::SteamUsers(
+            client.get_player_summaries(&result).await?
+        ).into())
+    }
+}
+
+#[post("/interpret_id_input", data = "<id_str>")]
+pub async fn interpret_id_input(mut id_str: String, client: &State<SteamClient>) -> APIResult<SteamUser>
+{
+    // If a URL was entered
+    if let Some((_, new_id)) = id_str.rsplit_once('/') {
+        id_str = new_id.to_string();
+    }
+
+    // Try a Steam ID
+    if let Ok(steam_id) = id_str.parse()
+    {
+        let result = client.get_player_summary(&steam_id).await;
+
+        if let Ok(user_info) = result
+        {
+            return Ok(user_info.into());
+        }
+    }
+
+    println!("{}", id_str);
+
+    // Not a Steam ID, maybe a vanity URL
+    let result = client.resolve_vanity_url(&id_str).await.map_err(|e| {
+        match e {
+            SteamError::VanityUrlNotFound => APIError::UnresolvableID,
+            _ => e.into(),
+        }
+    })?;
+
+    let info = client.get_player_summary(&result).await?;
+
+    Ok(info.into())
+}
 
 pub fn routes() -> Vec<Route>
 {
     routes![
         get_steam_users_info,
-        get_steam_users_info_test,
         get_friends_list,
-        get_friends_list_test,
+        interpret_id_input,
     ]
 }

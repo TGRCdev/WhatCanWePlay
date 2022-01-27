@@ -1,6 +1,5 @@
 use super::{ 
-    SteamID, SteamUser,
-    GetFriendsResponse
+    SteamID, SteamUser
 };
 use reqwest::{
     StatusCode, Client, ClientBuilder,
@@ -53,6 +52,9 @@ pub enum SteamError {
     
     // The given vanity url could not be resolved
     VanityUrlNotFound,
+
+    // The given Steam ID did not return a valid user
+    UserNotFound,
 }
 
 impl From<reqwest::Error> for SteamError
@@ -231,12 +233,20 @@ impl SteamClient {
         Ok(player_map)
     }
 
-    pub async fn get_friends_list(&self, user: SteamID, get_info: bool) -> SteamResult<GetFriendsResponse>
+    pub async fn get_player_summary(&self, steam_id: &SteamID) -> SteamResult<SteamUser> {
+        let mut result = self.get_player_summaries(core::slice::from_ref(steam_id)).await?;
+
+        let result = result.remove(steam_id).ok_or(SteamError::UserNotFound)?;
+
+        Ok(result)
+    }
+
+    pub async fn get_friends_list(&self, user: SteamID) -> SteamResult<Vec<SteamID>>
     {
         let webkey = &self.1;
         let user_str = user.to_string();
         let result = self.get(
-            "http://api.steampowered.com/ISteamUser/GetFriendList/v0001/"
+            "https://api.steampowered.com/ISteamUser/GetFriendList/v0001/"
         )
         .query(&[
             ("key", webkey.as_ref()),
@@ -257,19 +267,34 @@ impl SteamClient {
                 user["steamid"].as_str().and_then(|s| s.parse().ok())
             }).collect();
         
-        if !get_info {
-            Ok(GetFriendsResponse::Type1(result))
-        }
-        else {
-            Ok(GetFriendsResponse::Type2(
-                self.get_player_summaries(&result).await?
-            ))
-        }
+        Ok(result)
     }
 
-    pub async fn resolve_vanity_url(&self, vanityurl: String) -> SteamResult<SteamUser>
+    pub async fn resolve_vanity_url<'r>(&self, vanity_url: &'r str) -> SteamResult<SteamID>
     {
         let webkey = &self.1;
-        todo!();
+        
+        let result = self.get(
+            "https://api.steampowered.com/ISteamUser/ResolveVanityURL/v1/"
+        )
+        .query(&[
+            ("key", webkey.as_ref()),
+            ("vanityurl", vanity_url),
+        ]).send().await?;
+
+        let result = Self::common_steam_errors(result).await?;
+
+        let mut result: Value = result.json().await?;
+
+        let result = result["response"]["steamid"].take(); // Possibly null
+
+        if let Ok(steam_id) = serde_json::from_value(result)
+        {
+            Ok(steam_id)
+        }
+        else
+        {
+            Err(SteamError::VanityUrlNotFound)
+        }
     }
 }

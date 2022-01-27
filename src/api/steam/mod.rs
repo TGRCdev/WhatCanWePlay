@@ -62,6 +62,33 @@ pub struct SteamUser {
     pub user_state: i8,
 }
 
+pub mod requests {
+    use serde::Deserialize;
+    use super::SteamID;
+
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    pub enum GetSteamUsersInfoRequest {
+        Single(SteamID),
+        Vec(Vec<SteamID>),
+        Object {
+            steam_ids: Vec<SteamID>,
+        }
+    }
+
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    pub enum GetFriendsRequest {
+        SteamID(SteamID),
+        Object {
+            steam_id: SteamID,
+            #[serde(default)]
+            get_info: bool,
+        },
+    }
+}
+pub use requests::*;
+
 pub mod responses {
     use rocket::serde::Serialize;
     use std::collections::HashMap;
@@ -70,8 +97,15 @@ pub mod responses {
     #[derive(Serialize)]
     #[serde(untagged)]
     pub enum GetFriendsResponse {
-        Type1(Vec<SteamID>),
-        Type2(HashMap<SteamID, SteamUser>),
+        SteamIDs(Vec<SteamID>),
+        SteamUsers(HashMap<SteamID, SteamUser>),
+    }
+
+    #[derive(Serialize)]
+    #[serde(untagged)]
+    pub enum ResolveVanityURLResponse {
+        UserID(SteamID),
+        UserInfo(SteamUser),
     }
 }
 pub use responses::*;

@@ -162,7 +162,7 @@ html, body {
     height: 56px;
 }
 
-.user-name {
+.user-name-div {
     padding-left:10px;
     padding-right:10px;
     overflow-wrap:anywhere;
