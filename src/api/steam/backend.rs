@@ -249,6 +249,7 @@ impl SteamClient {
 
     pub async fn get_friends_list(&self, user: SteamID) -> SteamResult<Vec<SteamID>>
     {
+        // TODO: Handle private friends list
         let webkey = &self.1;
         let user_str = user.to_string();
         let result = self.get(

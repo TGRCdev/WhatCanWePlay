@@ -28,7 +28,7 @@
 <div id="app" class="on-users">
     <div id="users">
         <div id="main-user" class="user list-item {% if not logged_in %}not-signed-in-hide{% endif %}">
-            <img id="main-user-img" class="user-img{% if not logged_in %} offline{% endif %}" src="/static/images/default_avatar.png"/>
+            <img id="main-user-img" class="user-img" src="/static/images/default_avatar.png"/>
             <div class="user-name">
                 {% if logged_in %}
                 <span id="main-user-name"></span>
@@ -37,7 +37,7 @@
                 <em>Not signed in</em>
                 {% endif %}
             </div>
-            <button class="user-checkbox" {% if logged_in %} onclick="userCheckboxClicked(this)"{% else %}disabled{% endif %}>
+            <button class="user-checkbox" {% if not logged_in %}disabled{% endif %}>
                 <div class="user-checkbox-fill" style="display:none;"></div>
             </button>
         </div>

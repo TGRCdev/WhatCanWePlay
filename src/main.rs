@@ -6,7 +6,6 @@ use rocket::{
         providers::{ Json, Format, Env },
     },
     fairing::AdHoc,
-    fs::FileServer,
     Rocket, Build,
 };
 use rocket_dyn_templates::{

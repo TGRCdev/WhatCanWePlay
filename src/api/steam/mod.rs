@@ -22,6 +22,8 @@ pub struct SteamID (
     u64
 );
 
+pub type GameID = SteamID;
+
 impl Display for SteamID {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.0.fmt(f)
@@ -83,6 +85,9 @@ pub struct SteamUser {
 
     #[serde(rename(deserialize = "personastate"))]
     pub user_state: SteamUserState,
+
+    #[serde(rename(deserialize = "gameid"))]
+    pub current_game: Option<GameID>,
 }
 
 pub mod requests {
@@ -111,27 +116,6 @@ pub mod requests {
     }
 }
 pub use requests::*;
-
-pub mod responses {
-    use rocket::serde::Serialize;
-    use std::collections::HashMap;
-    use super::*;
-
-    #[derive(Serialize)]
-    #[serde(untagged)]
-    pub enum GetFriendsResponse {
-        SteamIDs(Vec<SteamID>),
-        SteamUsers(HashMap<SteamID, SteamUser>),
-    }
-
-    #[derive(Serialize)]
-    #[serde(untagged)]
-    pub enum ResolveVanityURLResponse {
-        UserID(SteamID),
-        UserInfo(SteamUser),
-    }
-}
-pub use responses::*;
 
 pub mod frontend;
 pub mod backend;

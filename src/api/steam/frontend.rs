@@ -1,7 +1,6 @@
 use super::{
     SteamID, SteamUser,
     backend::{ SteamError, SteamClient },
-    responses::*,
     requests::*,
 };
 use rocket::{
@@ -127,34 +126,13 @@ pub async fn get_steam_user_info(steam_id: Json<SteamID>, client: &State<SteamCl
     }
 }
 
-#[post("/get_friends_list", data = "<request>")]
-pub async fn get_friends_list(request: Json<GetFriendsRequest>, client: &State<SteamClient>) -> APIResult<GetFriendsResponse>
+#[post("/get_user_and_friends_info", data = "<steam_id>")]
+pub async fn get_user_and_friends_info(steam_id: Json<SteamID>, client: &State<SteamClient>) -> APIResult<HashMap<SteamID, SteamUser>>
 {
-    let steam_id;
-    let get_info;
-    match *request {
-        GetFriendsRequest::SteamID(id) => {
-            steam_id = id;
-            get_info = false;
-        },
-        GetFriendsRequest::Object { steam_id: id, get_info: info } => {
-            steam_id = id;
-            get_info = info;
-        }
-    }
+    let mut id_list = client.get_friends_list(*steam_id).await?;
+    id_list.push(*steam_id);
 
-    let result = client.get_friends_list(steam_id).await?;
-
-    if !get_info
-    {
-        Ok(GetFriendsResponse::SteamIDs(result).into())
-    }
-    else
-    {
-        Ok(GetFriendsResponse::SteamUsers(
-            client.get_player_summaries(&result).await?
-        ).into())
-    }
+    Ok(client.get_player_summaries(&id_list).await?.into())
 }
 
 #[post("/interpret_id_input", data = "<id_str>")]
@@ -196,7 +174,7 @@ pub fn routes() -> Vec<Route>
     routes![
         get_steam_users_info,
         get_steam_user_info,
-        get_friends_list,
+        get_user_and_friends_info,
         interpret_id_input,
     ]
 }
