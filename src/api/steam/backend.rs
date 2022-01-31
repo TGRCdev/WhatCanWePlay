@@ -57,6 +57,8 @@ pub enum SteamError {
     UserNotFound,
 }
 
+// TODO: Tracing errors?
+
 impl From<reqwest::Error> for SteamError
 {
     fn from(err: reqwest::Error) -> Self {
@@ -249,7 +251,6 @@ impl SteamClient {
 
     pub async fn get_friends_list(&self, user: SteamID) -> SteamResult<Vec<SteamID>>
     {
-        // TODO: Handle private friends list
         let webkey = &self.1;
         let user_str = user.to_string();
         let result = self.get(
@@ -261,6 +262,10 @@ impl SteamClient {
             ("relationship", "friend"),
             ("format", "json"),
         ]).send().await?;
+
+        if result.status() == StatusCode::UNAUTHORIZED {
+            return Err(SteamError::PrivateFriendsList);
+        }
 
         let result = Self::common_steam_errors(result).await?;
 
