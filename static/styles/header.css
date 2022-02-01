@@ -1,0 +1,15 @@
+#header-link:link, #header-link:visited, #header-link:hover, #header-link:active {
+    text-decoration: none;
+    color: whitesmoke;
+}
+
+header h1 {
+    margin: 0;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    text-align: center;
+}
+
+header {
+    background: linear-gradient(#272727, #212121, #212121, #181818);
+}

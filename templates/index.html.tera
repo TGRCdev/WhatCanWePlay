@@ -1,0 +1,32 @@
+{%- extends "base_page" -%}
+{%- block title -%} WhatCanWePlay {%- endblock -%}
+{%- block title_postfix -%}{%- endblock -%}
+
+{%- block styles -%}
+{{ super() }}
+<link rel="stylesheet" href="/static/styles/grid.css">
+<link rel="stylesheet" href="/static/styles/index.css">
+<link rel="stylesheet" href="/static/styles/fit_into_screen.css">
+{%- endblock -%}
+
+{%- block content -%}
+<div id="sign-in">
+    To get started, enter your Steam ID or vanity url<br/>
+    <div>
+    <input type="text" onsubmit="submitId()" placeholder="SteamID or vanity url" id="id-input"/> <button onclick="submitId()">Submit</button>
+    </div>
+    <br/>
+    or click "Sign in through Steam" below<br/>
+    <a href="/steam_login"><img src="/static/images/sits.png" /></a>
+</div>
+<div id="about">
+    <div>
+        <h2>What is this site?</h2>
+        <p>WhatCanWePlay is a web app for finding Steam games that you and a group of friends all share in common.</p>
+    </div>
+    <div>
+        <h2>Doesn't Steam already do this?</h2>
+        <p>Only when you're checking common games between yourself and one other person. This site lets you find games that an entire group of friends own, not just you and someone else.</p>
+    </div>
+</div>
+{%- endblock -%}

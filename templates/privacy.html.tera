@@ -1,113 +1,128 @@
 {% extends "base_page" %}
 {% block title %}Privacy Policy{% endblock %}
 
+{%- block styles -%}
+{{ super() }}
+<style>
+    main {
+        padding-left: 10px;
+        padding-right: 10px;
+        padding-bottom: 20px;
+        text-align: left;
+    }
+
+    main h1 {
+        text-align: center;
+        margin-bottom: 10px;
+    }
+</style>
+{%- endblock -%}
+
 {% block content %}
-<div style="padding-left:10px;padding-right:10px;padding-bottom:20px;">
-    <h1 style="text-align:center">Privacy Policy</h1>
-    This document describes what information we collect, how we use it, and how we store it.
-    <h2>1. Information We Collect</h2>
-    <dl>
-        <dt>
-            <h3>1.1 Information Collected Automatically</h3>
-        </dt>
-        <dd>
-            When you visit our website, we log the following information.
-            <ul>
-                <li>Your IP address</li>
-                <li>The web page you are trying to access</li>
-                <li>The browser you are using</li>
-                <li>The date and time</li>
-            </ul>
-            Most websites log this information.<br />
-            <br />
-            In the case of an error, we may store additional information, such
-            <ul>
-                <li>Your Steam ID</li>
-                <li>The Steam IDs of the users you selected</li>
-                <li>The error that occurred</li>
-            </ul>
-            This information is not associated with your IP address.
-        </dd>
-        <dt>
-            <h3>1.2 Information Given By Steam</h3>
-        </dt>
-        <dd>
-            When you sign in with Steam, or provide a vanity url or Steam ID, Steam provides us with the following information about you through the Steam Web API.
-            <ul>
-                <li>Your Steam ID</li>
-                <li>Your Steam screen name</li>
-                <li>A link to your avatar picture</li>
-                <li>The Steam games you own</li>
-            </ul>
-            We can only retrieve your owned games if your profile visibility is set to Public.<br/>
-            <br/>
-            Steam also provides us the following information about the users on your Friends List through the Steam Web API.
-            <ul>
-                <li>Their Steam IDs</li>
-                <li>Their Steam screen names</li>
-                <li>Links to their avatar pictures</li>
-                <li>The Steam games they own</li>
-            </ul>
-            We can only retrieve your friends list if your profile is set to Public. We can only retrieve your friends' games lists if your friends' profiles have their visibility set to Public.<br/>
-        </dd>
-    </dl>
-    <h2>2. Information We Store</h2>
-    <dl>
-        <dt><h3>2.1 Cookies</h3></dt>
-        <dd>
-            When you sign in with Steam, we store your Steam information in your browser's local storage. This information contains:
-            <ul>
-                <li>Your Steam ID</li>
-                <li>Your Steam screen name</li>
-                <li>A link to your avatar picture</li>
-            </ul>
-            This information is stored so you do not have to log in every single time you want to use the app's functions.<br/>
-            <br/>
-            This information is transmitted to us to get your public information from Steam, your friends list (if public), and the public information of your friends.
-            <br/>
-            If you want to stop providing WhatCanWePlay with your Steam information, you can click "Sign Out" on the web app interface, or <a href="/logout">click here</a>. Both methods will delete a cookie labeled "loggedIn", and the main page will delete your SteamID from your browser's local storage. You can also manually delete the cookie and reload the main page.
-        </dd>
-        <dt><h3>2.2 Game Info</h3></dt>
-        <dd>
-            When you use the app to find games, we take the App IDs of the games you and your friends own and fetch the following information from the <a href="https://www.igdb.com">IGDB</a>.
-            <ul>
-                <li>The name of the game</li>
-                <li>A link to a banner picture for the game</li>
-                <li>A list of tags associated with the game</li>
-                <li>The gamemodes that the game supports (i.e. Singleplayer, Multiplayer)</li>
-                <li>The number of players supported by the Multiplayer mode, if supported.</li>
-            </ul>
-            This information is stored on our servers to reduce the number of requests we make to the <a href="https://www.igdb.com">IGDB</a>. None of this information is personally linked to you or your friends in any way.
-        </dd>
-        <dt><h3>2.3 Error Info</h3></dt>
-        <dd>
-            In the case that an error occurs while using the app, depending on the error, the following information may be stored on the server.
-            <ul>
-                <li>Your Steam ID</li>
-                <li>The Steam IDs of the users you selected</li>
-                <li>The error that occurred</li>
-            </ul>
-            This information is stored separately from the website's logs, and cannot be used to associate Steam IDs to IP addresses.
-        </dd>
-    </dl>
-    <h2>3. Information We Distribute</h2>
-    <dl>
-        <dd>
-            WhatCanWePlay will never distribute or communicate you or your friends' Steam information with any third-party other than Steam.
-        </dd>
-    </dl>
-    <h2>4. How To Contact Us</h2>
-    <dl>
-        {%- if privacy_email and privacy_email.user_reversed and privacy_email.domain_reversed -%}
-        {%- set user = privacy_email.user_reversed -%}{%- set domain = privacy_email.domain_reversed -%}
-        {%- else -%}
-        {%- set user = contact_email.user_reversed -%}{%- set domain = contact_email.domain_reversed -%}
-        {%- endif -%}
-        <dd>
-            If you have any further questions, concerns or claims about the data we collect, you can email us at <a class="protected-email" title="Enable JavaScript to show the email" data-user="{{ user }}" data-domain="{{ domain }}" data-set-text-to-email>{% raw %}{email protected}{% endraw %}</a>.
-        </dd>
-    </dl>
-    <br/>
-    <em>This document was last updated on Jan 27th, 2022.</em>
-</div>
+<h1>Privacy Policy</h1>
+<div style="text-align:center">This document describes what information we collect, how we use it, and how we store it.</div>
+<h2>1. Information We Collect</h2>
+<dl>
+    <dt>
+        <h3>1.1 Information Collected Automatically</h3>
+    </dt>
+    <dd>
+        When you visit our website, we log the following information.
+        <ul>
+            <li>Your IP address</li>
+            <li>The web page you are trying to access</li>
+            <li>The browser you are using</li>
+            <li>The date and time</li>
+        </ul>
+        Most websites log this information.<br />
+        <br />
+        In the case of an error, we may store additional information, such
+        <ul>
+            <li>Your Steam ID</li>
+            <li>The Steam IDs of the users you selected</li>
+            <li>The error that occurred</li>
+        </ul>
+        This information is not associated with your IP address.
+    </dd>
+    <dt>
+        <h3>1.2 Information Given By Steam</h3>
+    </dt>
+    <dd>
+        When you sign in with Steam, or provide a vanity url or Steam ID, Steam provides us with the following information about you through the Steam Web API.
+        <ul>
+            <li>Your Steam ID</li>
+            <li>Your Steam screen name</li>
+            <li>A link to your avatar picture</li>
+            <li>The Steam games you own</li>
+        </ul>
+        We can only retrieve your owned games if your profile visibility is set to Public.<br/>
+        <br/>
+        Steam also provides us the following information about the users on your Friends List through the Steam Web API.
+        <ul>
+            <li>Their Steam IDs</li>
+            <li>Their Steam screen names</li>
+            <li>Links to their avatar pictures</li>
+            <li>The Steam games they own</li>
+        </ul>
+        We can only retrieve your friends list if your profile is set to Public. We can only retrieve your friends' games lists if your friends' profiles have their visibility set to Public.<br/>
+    </dd>
+</dl>
+<h2>2. Information We Store</h2>
+<dl>
+    <dt><h3>2.1 Steam Info</h3></dt>
+    <dd>
+        When you sign in with Steam, we store your Steam information in your browser's local storage. This information contains:
+        <ul>
+            <li>Your Steam ID</li>
+            <li>Your Steam screen name</li>
+            <li>A link to your avatar picture</li>
+        </ul>
+        This information is stored so you do not have to log in every single time you want to use the app's functions.<br/>
+        <br/>
+        This information is transmitted to us to get your public information from Steam, your friends list (if public), and the public information of your friends.<br/>
+        <br/>
+        If you want to stop providing WhatCanWePlay with your Steam information, you can click "Sign Out" on the web app interface, or <a href="/logout">click here</a>. Both methods will delete a cookie labeled "loggedIn", and the main page will delete your Steam info from your browser's local storage. You can also manually delete the cookie and reload the main page.
+    </dd>
+    <dt><h3>2.2 Game Info</h3></dt>
+    <dd>
+        When you use the app to find games, we take the App IDs of the games you and your friends own and fetch the following information from the <a href="https://www.igdb.com">IGDB</a>.
+        <ul>
+            <li>The name of the game</li>
+            <li>A link to a banner picture for the game</li>
+            <li>A list of tags associated with the game</li>
+            <li>The gamemodes that the game supports (i.e. Singleplayer, Multiplayer)</li>
+            <li>The number of players supported by the Multiplayer mode, if supported.</li>
+        </ul>
+        This information is stored on our servers to reduce the number of requests we make to the <a href="https://www.igdb.com">IGDB</a>. None of this information is personally linked to you or your friends in any way.
+    </dd>
+    <dt><h3>2.3 Error Info</h3></dt>
+    <dd>
+        In the case that an error occurs while using the app, depending on the error, the following information may be stored on the server.
+        <ul>
+            <li>Your Steam ID</li>
+            <li>The Steam IDs of the users you selected</li>
+            <li>The error that occurred</li>
+        </ul>
+        This information is stored separately from the website's logs, and cannot be used to associate Steam IDs to IP addresses.
+    </dd>
+</dl>
+<h2>3. Information We Distribute</h2>
+<dl>
+    <dd>
+        WhatCanWePlay will never distribute or communicate you or your friends' Steam information with any third-party other than Steam.
+    </dd>
+</dl>
+<h2>4. How To Contact Us</h2>
+<dl>
+    {%- if privacy_email and privacy_email.user_reversed and privacy_email.domain_reversed -%}
+    {%- set user = privacy_email.user_reversed -%}{%- set domain = privacy_email.domain_reversed -%}
+    {%- else -%}
+    {%- set user = contact_email.user_reversed -%}{%- set domain = contact_email.domain_reversed -%}
+    {%- endif -%}
+    <dd>
+        If you have any further questions, concerns or claims about the data we collect, you can email us at <a class="protected-email" title="Enable JavaScript to show the email" data-user="{{ user }}" data-domain="{{ domain }}" data-set-text-to-email>{% raw %}{email protected}{% endraw %}</a>.
+    </dd>
+</dl>
+<br/>
+<em>This document was last updated on Jan 31st, 2022.</em>
 {% endblock %}

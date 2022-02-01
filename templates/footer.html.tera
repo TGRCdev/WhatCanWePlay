@@ -1,0 +1,18 @@
+<footer>
+    <div id="copyright">
+        <div>
+            © TGRCDev
+        </div>
+        <div>
+            2020-2022
+        </div>
+    </div>
+    <nav>
+        {%- if donate_url %}
+        <a href="{{ donate_url }}" id="donate">Donate</a> |
+        {% endif -%}
+        <a href="/privacy" id="privacy">Privacy</a> |
+        <a href="{{ source_url }}" id="source">Source</a> |
+        <a id="contact" class="protected-email" data-user="{{ contact_email.user_reversed }}" data-domain="{{ contact_email.domain_reversed }}">Contact</a>
+    </nav>
+</footer>

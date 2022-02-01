@@ -5,6 +5,7 @@ use rocket::{
         Figment,
         providers::{ Json, Format, Env },
     },
+    fs::FileServer,
     fairing::AdHoc,
     Rocket, Build,
 };
@@ -43,7 +44,8 @@ async fn launch() -> Rocket<Build> {
 
     rocket::custom(figment)
         .mount("/", routes())
-        .mount("/static", CachedFileServer::from("static"))
+        // TODO: Replace FileServer with CachedFileServer
+        .mount("/static", FileServer::from("static"))
         .attach(AdHoc::config::<WCWPConfig>())
         
         .mount("/api", api::routes())

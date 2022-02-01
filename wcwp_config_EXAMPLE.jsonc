@@ -1,14 +1,21 @@
 {
+    // REQUIRED
     // Provides a Contact link in the footer
     "contact_email": "contact@whatcanweplay.net",
-    // Optional, specifically used in the '/privacy' page. If missing, the contact email will be used instead.
+
+    // Optional
+    // Specifically used in the '/privacy' page. If missing, the contact email will be used instead.
     "privacy_email": "privacy@whatcanweplay.net", 
 
+    // REQUIRED
     // Provides a Source link in the footer
     "source_url": "https://git.tgrc.dev/TGRCDev/WhatCanWePlay",
-    // Optional, provides a Donate link in the footer
+
+    // Optional
+    // Provides a Donate link in the footer
     "donate_url": "https://paypal.me/TGRCDeveloper",
 
+    // REQUIRED
     // Used for retrieving Steam user info
-    "steam_webkey": "STEAM WEBKEY HERE"
+    "steam_webkey": "{STEAM WEBKEY HERE}"
 }

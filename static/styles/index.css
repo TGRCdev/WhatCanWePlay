@@ -1,0 +1,26 @@
+main>div {
+    gap: 10px;
+    padding: 20px;
+}
+
+#about h2 {
+    margin:0;
+}
+
+#about p {
+    margin:0;
+}
+
+/* Desktop Only */
+@media screen and (min-width: 600px) {
+    main {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+/* Mobile Only */
+@media screen and (max-width: 600px) {
+    main {
+        grid-template-rows: 1fr 1fr;
+    }
+}

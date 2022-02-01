@@ -1,0 +1,16 @@
+html {
+    background-color: #222;
+    color: whitesmoke;
+    font-family: 'Trebuchet MS', Arial, Helvetica, sans-serif;
+    text-align: center;
+    min-width: 320px;
+}
+
+a:link, a:visited, a:hover, a:active {
+    color: greenyellow
+}
+
+body {
+    margin: 0;
+    height: 100vh;
+}
