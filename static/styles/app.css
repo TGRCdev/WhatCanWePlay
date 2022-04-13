@@ -192,7 +192,8 @@ html, body {
 
 .user-img {
     height: 80%;
-    border: solid 2px #0870b5;
+    border-style: solid;
+    border-width: 2px;
     border-radius: 4px;
 }
 

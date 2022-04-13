@@ -38,7 +38,7 @@
                 {% endif %}
             </div>
             <button class="user-checkbox" {% if not logged_in %}disabled{% endif %}>
-                <div class="user-checkbox-fill" style="display:none;"></div>
+                <div class="user-checkbox-fill" style="display:block;"></div>
             </button>
         </div>
         <input type="text" {% if not logged_in %}class="not-signed-in-hide"{% endif %} id="user-search" placeholder="Search by name" {% if not logged_in %}disabled{% endif %} />
@@ -61,7 +61,7 @@
         <div id="users-cover" style="display:none;"></div>
     </div>
     <div id="submit">
-        <button class="slide-button{% if not logged_in %} not-signed-in-hide{% endif %}" id="submit-button" disabled>Find Games</button>
+        <button class="slide-button{% if not logged_in %} not-signed-in-hide{% endif %}" id="submit-button" disabled>Setting up...</button>
     </div>
     <div id="back">
         <button class="slide-button" id="back-button">Go Back</button>

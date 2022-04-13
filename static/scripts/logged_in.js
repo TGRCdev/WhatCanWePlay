@@ -29,6 +29,7 @@ async function loadUserFromLocalStorage(setup) {
     {
         logOut()
     }
+    selected_users.push(main_user)
 
     main_user["screen_name"] = window.localStorage.getItem("screen_name")
     if(main_user["screen_name"] == null)
@@ -120,6 +121,20 @@ async function fetchFriends() {
     }
 }
 
+/// Predicate for weakly sorting friends
+/// based on online status
+function statusToSortVal(status) {
+    return [
+        7, // 0 = Offline
+        1, // 1 = Online
+        6, // 2 = Busy
+        2, // 3 = Away
+        2, // 4 = Snooze
+        1, // 5 = Looking to Trade
+        0 // 6 = Looking to Play
+    ][status]
+}
+
 /// Loops through the users table, creates 
 /// user elements and puts them into the users'
 /// respective objects under "elems"
@@ -127,7 +142,24 @@ async function setUpUserObjects() {
     let friend_list = document.getElementById("friends")
     //friend_list.innerText = "" // Clear all children
 
-    for (const [steam_id, user] of Object.entries(users)) {
+    let user_list = Object.values(users)
+
+    await user_list.sort(function(a, b) {
+        // Weakly sort users by their current status
+        let a_val = statusToSortVal(a["user_state"])
+        let b_val = statusToSortVal(b["user_state"])
+
+        if(a_val > b_val)
+            return 1
+        else if(a_val < b_val)
+            return -1
+        else
+            return 0
+    })
+
+    for (const idx in user_list) {
+        let user = user_list[idx]
+        let steam_id = user["steam_id"]
         if(user["elems"] != null)
             continue
         
@@ -144,7 +176,7 @@ async function setUpUserObjects() {
         }
         else
         {
-            switch(user["online_status"]) {
+            switch(user["user_state"]) {
                 
                 case 1: // Online
                 case 3: // Away
@@ -166,7 +198,6 @@ async function setUpUserObjects() {
         // TODO: Disable if a user is private
         let button_fill = document.createElement("div")
         button_fill.className = "user-checkbox-fill"
-        button_fill.style.display = "none"
         button.appendChild(button_fill)
 
         let user_div = document.createElement("div")
@@ -181,6 +212,7 @@ async function setUpUserObjects() {
         else
         {
             friend_list.appendChild(user_div)
+            button_fill.style.display = "none"
         }
         user_div.appendChild(img)
         user_div.appendChild(name)
@@ -204,14 +236,38 @@ function userCheckboxClicked(steam_id) {
             selected_users.push(user)
             break
         default:
+            //console.log("removing", user["steam_id"])
             user["elems"]["button_fill"].style.display = "none"
             let index = selected_users.findIndex((elem) => elem["steam_id"] == steam_id)
-            if(index) {
+            if(index >= 0) {
                 selected_users.splice(index, 1)
             }
             break
     }
-    console.log(selected_users)
+    updateFindGamesButton()
+}
+
+function updateFindGamesButton() {
+    let submit = document.getElementById("submit-button")
+    let len = selected_users.length
+    if(len > 1)
+    {
+        submit.innerText = "Find Games"
+        submit.disabled = false
+    }
+    else
+    {
+        submit.innerText = "Select at least 2 users"
+        submit.disabled = true
+    }
+}
+
+async function submitButton() {
+    let submit = document.getElementById("submit-button")
+    submit.disabled = true
+    submit.innerText = "Checking..."
+
+    // TODO: Finish API and do this
 }
 
 window.addEventListener("load", async (event) => {
@@ -219,4 +275,5 @@ window.addEventListener("load", async (event) => {
     await loadUserFromLocalStorage(setup)
     await fetchFriends()
     setUpUserObjects()
+    updateFindGamesButton()
 })
